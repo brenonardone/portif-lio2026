@@ -1,4 +1,4 @@
-# Controle Geral GLP — BI de armazém
+# Controle Geral Arm/cd — BI de armazém
 
 Painel de BI para operação de armazém/CD: recebimento, armazenagem, expedição, devolução, avarias, inventário, condições ambientais e movimentação — tudo alimentado por **planilhas exportadas do WMS/ERP**, sem integração direta com o sistema de origem.
 
