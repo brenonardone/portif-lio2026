@@ -62,7 +62,7 @@ A operação exportava planilhas todo dia e acompanhava os números "no olho". O
 
 ## Stack
 
-TypeScript · Node 20+ · Express · MySQL/MariaDB · React + Vite · ExcelJS · dashboards em JS puro servidos como páginas (`server/views`) · Playwright (apenas para gerar os prints).
+TypeScript · Node 20+ · Express · MySQL/MariaDB · React + Vite · ExcelJS · dashboards em JS puro servidos como páginas (`server/views`).
 
 ## Como rodar com os dados fictícios
 
@@ -107,6 +107,10 @@ dados_exemplo/  planilhas fictícias prontas para upload
 scripts/        gerador de dados fictícios
 docs/img/       prints
 ```
+
+## Licença
+
+MIT — veja [LICENSE](LICENSE).
 
 ## Aviso
 

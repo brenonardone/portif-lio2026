@@ -1,5 +1,5 @@
 {
-  "name": "controle-geral-glp-bi",
+  "name": "controle-geral-bi",
   "private": true,
   "version": "1.0.0",
   "type": "module",
@@ -34,7 +34,9 @@
     "react-chartjs-2": "^5.2.0",
     "react-dom": "^18.3.1",
     "react-router-dom": "^7.18.3",
-    "zod": "^3.23.8",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
     "@types/cookie-parser": "^1.4.7",
     "@types/express": "^4.17.21",
@@ -48,5 +50,10 @@
     "tsx": "^4.19.0",
     "typescript": "^5.5.4",
     "vite": "^5.4.3"
+  },
+  "description": "BI de armazém/CD alimentado por planilhas do WMS/ERP (projeto de portfólio, dados fictícios)",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
   }
 }
