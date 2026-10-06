@@ -1,0 +1,10 @@
+node_modules/
+dist/
+dist-server/
+*.log
+.DS_Store
+
+# segredos locais -- nunca versionar
+.env
+.env.*
+!.env.example
