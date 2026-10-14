@@ -1,0 +1,497 @@
+<title>Consolidado do Inventário — 1ª e 2ª Contagem</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap">
+<style>
+  :root{
+    --red:#D32B2B;
+    --maroon:#7A1414;
+    --blue:#2A78D6;
+    --green:#1F8A4C;
+    --ink:#1A1A1A;
+    --ink-soft:#6B6B6B;
+    --line:#E4E1DC;
+    --panel-bg:#F5F4F1;
+    --surface:#FCFCFB;
+    --bg:#FFFFFF;
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:44px 32px 90px;}
+
+  h1,h2,.oswald{font-family:'Oswald', sans-serif;}
+
+  /* ---- top masthead ---- */
+  .top-masthead{padding-bottom:20px;border-bottom:3px solid var(--ink);margin-bottom:10px;}
+  .masthead-tag{
+    font-family:'Oswald',sans-serif;font-weight:600;font-size:13px;letter-spacing:.14em;
+    color:var(--ink);text-transform:uppercase;
+  }
+  .masthead-tag .pipe{color:var(--red);font-weight:700;}
+  h1.main-title{
+    font-weight:700;font-size:clamp(30px,4vw,46px);color:var(--red);text-transform:uppercase;
+    margin:8px 0 0;letter-spacing:.005em;line-height:1.05;text-wrap:balance;
+  }
+  .top-subtitle{color:var(--ink-soft);font-size:15px;margin:10px 0 0;line-height:1.55;max-width:78ch;}
+
+  /* ---- report block divider ---- */
+  .report-block{margin-top:56px;}
+  .report-block.second{border-top:3px dashed var(--line);padding-top:44px;}
+  .block-tag{
+    display:inline-block;font-family:'Oswald',sans-serif;font-weight:700;font-size:12.5px;letter-spacing:.14em;
+    text-transform:uppercase;color:#fff;background:var(--maroon);padding:4px 12px;border-radius:3px;margin-bottom:12px;
+  }
+  .block-tag.c2{background:var(--blue);}
+  h1.block-title{
+    font-weight:700;font-size:clamp(24px,3.2vw,34px);color:var(--ink);text-transform:uppercase;
+    margin:0 0 10px;letter-spacing:.005em;line-height:1.1;
+  }
+  .subtitle{color:var(--ink-soft);font-size:14.5px;margin:0 0 20px;line-height:1.55;max-width:78ch;}
+  .subtitle b{color:var(--ink);font-weight:700;}
+
+  /* ---- filter/meta bar ---- */
+  .filter-bar{
+    background:var(--panel-bg);border:1px solid var(--line);border-radius:6px;
+    padding:14px 18px;display:flex;flex-wrap:wrap;gap:10px 28px;align-items:center;
+    margin-bottom:38px;font-size:13px;color:var(--ink-soft);
+  }
+  .filter-bar .fb-item b{
+    color:var(--ink);font-family:'Inter';font-weight:700;font-variant-numeric:tabular-nums;
+  }
+  .filter-bar .fb-sep{color:var(--line);}
+
+  section{margin-bottom:46px;}
+  h2.section-title{
+    font-weight:600;font-size:15px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);
+    margin:0 0 16px;display:flex;align-items:baseline;gap:10px;
+  }
+  h2.section-title .count-tag{
+    font-family:'Inter';font-weight:500;font-size:12px;letter-spacing:0;text-transform:none;color:var(--ink-soft);
+  }
+
+  /* ---- KPI strip ---- */
+  .kpi-strip{
+    display:grid;grid-template-columns:repeat(6,1fr);border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+  }
+  .kpi-cell{padding:18px 20px;border-right:1px solid var(--line);}
+  .kpi-cell:last-child{border-right:none;}
+  .kpi-label{
+    font-family:'Inter';font-weight:700;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);
+  }
+  .kpi-value{
+    font-family:'Oswald',sans-serif;font-weight:700;font-size:34px;margin-top:6px;
+    font-variant-numeric:tabular-nums;letter-spacing:.01em;color:var(--ink);
+  }
+  .kpi-cell.c-red .kpi-value{color:var(--red);}
+  .kpi-cell.c-blue .kpi-value{color:var(--blue);}
+  .kpi-cell.c-maroon .kpi-value{color:var(--maroon);}
+  .kpi-sub{font-size:11.5px;color:var(--ink-soft);margin-top:3px;}
+
+  @media (max-width:900px){ .kpi-strip{grid-template-columns:repeat(3,1fr);} .kpi-cell:nth-child(3){border-right:none;} }
+  @media (max-width:560px){ .kpi-strip{grid-template-columns:repeat(2,1fr);} .kpi-cell:nth-child(2n){border-right:none;} }
+
+  /* ---- chart card ---- */
+  .chart-card{background:#fff;border:1px solid var(--line);border-radius:6px;padding:20px 22px 18px;}
+  .chart-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
+  .chart-head .ct{font-family:'Oswald';font-weight:600;font-size:14px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink);}
+  .legend{display:flex;gap:18px;font-size:12.5px;color:var(--ink-soft);}
+  .legend span{display:inline-flex;align-items:center;gap:6px;}
+  .legend i{width:9px;height:9px;border-radius:50%;display:inline-block;}
+
+  .bar-row{display:grid;grid-template-columns:32px 1fr 44px;align-items:center;gap:10px;padding:4px 0;}
+  .bar-row .rua-label{font-family:'Oswald',sans-serif;font-weight:600;font-size:13px;color:var(--ink-soft);}
+  .bar-track{position:relative;height:18px;background:var(--panel-bg);border-radius:2px;overflow:hidden;display:flex;}
+  .bar-seg{display:flex;align-items:center;justify-content:flex-end;padding-right:5px;min-width:0;}
+  .bar-seg.entrada{background:var(--red);}
+  .bar-seg.limpar{background:var(--blue);}
+  .bar-seg .seg-val{font-family:'Inter';font-weight:700;font-size:10.5px;color:#fff;font-variant-numeric:tabular-nums;white-space:nowrap;}
+  .bar-row .total{font-family:'Inter';font-weight:700;font-size:12.5px;color:var(--ink);text-align:right;font-variant-numeric:tabular-nums;}
+  .bar-row.zero .bar-track{background:transparent;}
+  .bar-row.zero .ok-tag{font-family:'Inter';font-weight:700;font-size:11px;color:var(--green);}
+
+  /* ---- table ---- */
+  .table-card{background:#fff;border:1px solid var(--line);border-radius:6px;overflow-x:auto;}
+  table{border-collapse:collapse;width:100%;min-width:560px;}
+  thead th{
+    text-align:left;font-family:'Inter';font-size:11px;text-transform:uppercase;letter-spacing:.07em;
+    color:var(--ink-soft);font-weight:700;padding:12px 16px;border-bottom:1px solid var(--line);background:var(--panel-bg);
+  }
+  thead th.num, tbody td.num{text-align:right;}
+  tbody td{padding:11px 16px;border-bottom:1px solid var(--line);font-size:13.5px;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr.total-row td{font-weight:800;border-top:1px solid var(--ink);}
+  tbody td.num{font-family:'Inter';font-variant-numeric:tabular-nums;font-weight:600;font-size:13.5px;}
+  td.name{font-weight:700;}
+  .ruas-tags{display:flex;gap:5px;flex-wrap:wrap;}
+  .rua-chip{
+    font-family:'Oswald';font-weight:600;font-size:11px;background:var(--panel-bg);
+    border:1px solid var(--line);border-radius:3px;padding:1px 6px;color:var(--ink-soft);
+  }
+
+  /* ---- conflicts ---- */
+  .conflict-box{background:#fff;border:1px solid var(--line);border-left:4px solid var(--maroon);border-radius:4px;padding:6px 22px;}
+  .conflict-item{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);font-size:13.5px;}
+  .conflict-item:last-child{border-bottom:none;}
+  .conflict-item .dot{color:var(--maroon);font-weight:700;font-family:'Oswald';}
+  .empty-note{font-size:13px;color:var(--ink-soft);padding:14px 2px;}
+
+  /* ---- detail accordion ---- */
+  details{background:#fff;border:1px solid var(--line);border-radius:6px;margin-bottom:6px;}
+  summary{cursor:pointer;list-style:none;padding:12px 18px;display:flex;align-items:center;gap:12px;font-size:13.5px;}
+  summary::-webkit-details-marker{display:none;}
+  summary::before{content:"›";color:var(--red);font-size:16px;font-weight:700;transition:transform .15s ease;flex:0 0 auto;}
+  details[open] summary::before{transform:rotate(90deg);}
+  summary .rua-name{font-family:'Oswald';font-weight:600;text-transform:uppercase;letter-spacing:.03em;}
+  summary .op-tag{color:var(--ink-soft);font-weight:500;font-size:12.5px;}
+  summary .badges{margin-left:auto;display:flex;gap:6px;}
+  .badge{font-family:'Inter';font-size:11px;padding:2px 8px;border-radius:20px;font-weight:700;}
+  .badge.entrada{background:color-mix(in srgb, var(--red) 12%, #fff);color:var(--red);}
+  .badge.limpar{background:color-mix(in srgb, var(--blue) 12%, #fff);color:var(--blue);}
+  .badge.ok{background:color-mix(in srgb, var(--green) 12%, #fff);color:var(--green);}
+  .detail-body{padding:0 18px 16px;}
+  .pos-group{margin-top:10px;}
+  .pos-group .glabel{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-soft);font-weight:700;margin-bottom:6px;}
+  .pos-list{display:flex;flex-wrap:wrap;gap:6px;}
+  .pos-chip{font-family:'Inter';font-weight:600;font-size:12px;padding:3px 8px;border-radius:3px;}
+  .pos-chip.entrada{background:color-mix(in srgb, var(--red) 10%, #fff);color:var(--red);}
+  .pos-chip.limpar{background:color-mix(in srgb, var(--blue) 10%, #fff);color:var(--blue);}
+  .no-diverg{font-size:12.5px;color:var(--ink-soft);padding-top:8px;}
+
+  /* ---- search / lists ---- */
+  .list-search{padding:14px 16px;border-bottom:1px solid var(--line);background:var(--panel-bg);}
+  .list-search input{
+    width:100%;max-width:340px;font-family:'Inter';font-size:13px;
+    padding:8px 12px;border:1px solid var(--line);border-radius:4px;background:#fff;color:var(--ink);
+  }
+  .list-search input:focus{outline:2px solid var(--red);outline-offset:1px;}
+  .list-search input::placeholder{color:var(--ink-soft);}
+  tbody td.rua-cell{font-family:'Oswald';font-weight:600;color:var(--ink-soft);}
+  tbody td.pos-cell{font-family:'Inter';font-weight:700;font-variant-numeric:tabular-nums;}
+  tbody tr.hide{display:none;}
+
+  footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--ink);font-size:12px;color:var(--ink-soft);line-height:1.7;}
+  footer .def{margin-bottom:4px;}
+  footer .def b{color:var(--ink);font-weight:700;}
+  footer .gen-line{margin-top:14px;font-family:'Inter';color:var(--ink-soft);}
+
+  @media (max-width:560px){ .filter-bar{flex-direction:column;align-items:flex-start;} }
+</style>
+
+<div class="wrap">
+
+  <header class="top-masthead">
+    <span class="masthead-tag"><span class="pipe">CDA |</span> Inventário Físico · Contagem Cega</span>
+    <h1 class="main-title">Consolidado Geral do Inventário</h1>
+    <p class="top-subtitle">Comparativo das divergências reportadas pelos conferentes em campo na <b>1ª contagem</b> (base <b>invent_rio_dia_0709.xlsx</b>) e na <b>2ª contagem</b> (reconferência das posições pendentes): posições a <b>dar entrada</b> (estoque físico sem registro no sistema) e a <b>limpar</b> (registro no sistema sem estoque físico).</p>
+  </header>
+
+  <div id="report1" class="report-block"></div>
+  <div id="report2" class="report-block second"></div>
+
+  <footer>
+    <div class="def"><b>Dar entrada</b> — posição em que o conferente encontrou estoque físico sem registro correspondente no sistema; requer lançamento de entrada manual.</div>
+    <div class="def"><b>Limpar</b> — posição com registro de estoque no sistema, mas sem produto físico encontrado na contagem; requer baixa/zeragem no sistema.</div>
+    <div class="def"><b>Conflito</b> — endereço reportado simultaneamente nas duas listas pelo mesmo conferente; mantido sem baixa automática até confirmação.</div>
+    <div class="gen-line" id="metaDateFooter"></div>
+  </footer>
+
+</div>
+
+<script>
+const DATA1 = {"rua_rows": [{"rua": "A", "entrada": 5, "limpar": 0, "total": 5, "operadores": ["Aline"]}, {"rua": "B", "entrada": 19, "limpar": 0, "total": 19, "operadores": ["Bia"]}, {"rua": "C", "entrada": 12, "limpar": 0, "total": 12, "operadores": ["Helena"]}, {"rua": "D", "entrada": 7, "limpar": 1, "total": 8, "operadores": ["Bento"]}, {"rua": "E", "entrada": 5, "limpar": 0, "total": 5, "operadores": ["Pietro"]}, {"rua": "F", "entrada": 0, "limpar": 4, "total": 4, "operadores": ["Ravi"]}, {"rua": "G", "entrada": 2, "limpar": 0, "total": 2, "operadores": ["Elisa"]}, {"rua": "H", "entrada": 11, "limpar": 0, "total": 11, "operadores": ["Enzo"]}, {"rua": "I", "entrada": 22, "limpar": 8, "total": 30, "operadores": ["Ravi"]}, {"rua": "J", "entrada": 2, "limpar": 0, "total": 2, "operadores": ["Lívia"]}, {"rua": "K", "entrada": 11, "limpar": 0, "total": 11, "operadores": ["Samuel"]}, {"rua": "L", "entrada": 13, "limpar": 1, "total": 14, "operadores": ["Pietro"]}, {"rua": "M", "entrada": 6, "limpar": 0, "total": 6, "operadores": ["Caio"]}, {"rua": "N", "entrada": 23, "limpar": 3, "total": 26, "operadores": ["Enzo"]}, {"rua": "O", "entrada": 19, "limpar": 1, "total": 20, "operadores": ["Isadora"]}, {"rua": "P", "entrada": 20, "limpar": 1, "total": 21, "operadores": ["Caio"]}, {"rua": "Q", "entrada": 21, "limpar": 0, "total": 21, "operadores": ["Lívia"]}, {"rua": "R", "entrada": 2, "limpar": 4, "total": 6, "operadores": ["Nicolas"]}, {"rua": "Z", "entrada": 12, "limpar": 1, "total": 13, "operadores": ["Nicolas"]}], "op_rows": [{"nome": "Caio", "entrada": 26, "limpar": 1, "total": 27, "ruas": ["M", "P"]}, {"nome": "Enzo", "entrada": 34, "limpar": 3, "total": 37, "ruas": ["H", "N"]}, {"nome": "Pietro", "entrada": 18, "limpar": 1, "total": 19, "ruas": ["E", "L"]}, {"nome": "Elisa", "entrada": 2, "limpar": 0, "total": 2, "ruas": ["G"]}, {"nome": "Bento", "entrada": 7, "limpar": 1, "total": 8, "ruas": ["D"]}, {"nome": "Isadora", "entrada": 19, "limpar": 1, "total": 20, "ruas": ["O"]}, {"nome": "Lívia", "entrada": 23, "limpar": 0, "total": 23, "ruas": ["J", "Q"]}, {"nome": "Nicolas", "entrada": 14, "limpar": 5, "total": 19, "ruas": ["R", "Z"]}, {"nome": "Helena", "entrada": 12, "limpar": 0, "total": 12, "ruas": ["C"]}, {"nome": "Aline", "entrada": 5, "limpar": 0, "total": 5, "ruas": ["A"]}, {"nome": "Ravi", "entrada": 22, "limpar": 12, "total": 34, "ruas": ["F", "I"]}, {"nome": "Samuel", "entrada": 11, "limpar": 0, "total": 11, "ruas": ["K"]}, {"nome": "Bia", "entrada": 19, "limpar": 0, "total": 19, "ruas": ["B"]}], "detail_rows": [{"operador": "Ravi", "rua": "F", "acao": "LIMPAR", "qtd": 4, "posicoes": ["F2202", "F2403", "F4506", "F7906"]}, {"operador": "Nicolas", "rua": "Z", "acao": "DAR ENTRADA", "qtd": 12, "posicoes": ["Z0304", "Z1903", "Z2302", "Z2303", "Z3706", "Z2106", "Z2503", "Z3305", "Z3505", "Z3705", "Z7103", "Z8103"]}, {"operador": "Nicolas", "rua": "Z", "acao": "LIMPAR", "qtd": 1, "posicoes": ["Z8304"]}, {"operador": "Enzo", "rua": "H", "acao": "DAR ENTRADA", "qtd": 11, "posicoes": ["H0603", "H1003", "H1203", "H2406", "H8803", "H0902", "H2103", "H2902", "H3706", "H5703", "H5904"]}, {"operador": "Samuel", "rua": "K", "acao": "DAR ENTRADA", "qtd": 11, "posicoes": ["K2404", "K6402", "K0302", "K0303", "K0905", "K1301", "K1702", "K6305", "K6504", "K6705", "K8103"]}, {"operador": "Lívia", "rua": "J", "acao": "DAR ENTRADA", "qtd": 2, "posicoes": ["J8102", "J3006"]}, {"operador": "Nicolas", "rua": "R", "acao": "LIMPAR", "qtd": 4, "posicoes": ["R0503C", "R3001B", "R2701B", "R2901B"]}, {"operador": "Nicolas", "rua": "R", "acao": "DAR ENTRADA", "qtd": 2, "posicoes": ["R0904A", "R2504A"]}, {"operador": "Caio", "rua": "M", "acao": "DAR ENTRADA", "qtd": 6, "posicoes": ["M5001", "M5604", "M6401", "M8403", "M1102", "M4301"]}, {"operador": "Helena", "rua": "C", "acao": "DAR ENTRADA", "qtd": 12, "posicoes": ["C4202", "C5004", "C5204", "C6002", "C1303", "C1902", "C4305", "C4705", "C5305", "C5905", "C6302", "C7503"]}, {"operador": "Isadora", "rua": "O", "acao": "DAR ENTRADA", "qtd": 19, "posicoes": ["O0801", "O3203", "O3804", "O4003", "O4401", "O5202", "O5803", "O6405", "O5603", "O7601", "O7801", "O8001", "O8201", "O0703", "O1705", "O2303", "O2702", "O2103", "O2502"]}, {"operador": "Isadora", "rua": "O", "acao": "LIMPAR", "qtd": 1, "posicoes": ["O5603"]}, {"operador": "Pietro", "rua": "E", "acao": "DAR ENTRADA", "qtd": 5, "posicoes": ["E0402", "E1303", "E1705", "E6102", "E5303"]}, {"operador": "Enzo", "rua": "N", "acao": "DAR ENTRADA", "qtd": 23, "posicoes": ["N0404", "N0405", "N0601", "N1602", "N2202", "N5001", "N5402", "N5403", "N6001", "N7402", "N7602", "N8203", "N0105", "N1305", "N1905", "N2101", "N2501", "N3104", "N3703", "N6504", "N7503", "N7505", "N7702"]}, {"operador": "Enzo", "rua": "N", "acao": "LIMPAR", "qtd": 3, "posicoes": ["N0901", "N6106", "N8501"]}, {"operador": "Aline", "rua": "A", "acao": "DAR ENTRADA", "qtd": 5, "posicoes": ["A2002", "A3204", "A3104", "A4103", "A8105"]}, {"operador": "Bento", "rua": "D", "acao": "DAR ENTRADA", "qtd": 7, "posicoes": ["D0303", "D5103", "D1004", "D1206", "D2803", "D5803", "D6804"]}, {"operador": "Bento", "rua": "D", "acao": "LIMPAR", "qtd": 1, "posicoes": ["D7706"]}, {"operador": "Lívia", "rua": "Q", "acao": "DAR ENTRADA", "qtd": 21, "posicoes": ["Q0104", "Q0201", "Q0405", "Q0601", "Q0704", "Q1102", "Q1402", "Q1701", "Q2003", "Q2103", "Q2201", "Q2703", "Q2802", "Q2904", "Q3006", "Q3602", "Q3702", "Q3802", "Q3902", "Q4002", "Q4102"]}, {"operador": "Pietro", "rua": "L", "acao": "DAR ENTRADA", "qtd": 13, "posicoes": ["L0701", "L0502", "L0504", "L0906", "L1702", "L1703", "L2306", "L3901", "L4102", "L5904", "L8706", "L6402", "L6001"]}, {"operador": "Pietro", "rua": "L", "acao": "LIMPAR", "qtd": 1, "posicoes": ["L1002"]}, {"operador": "Caio", "rua": "P", "acao": "DAR ENTRADA", "qtd": 20, "posicoes": ["P0601", "P0801", "P1401", "P2401", "P3801", "P4806", "P5604", "P7201", "P0701", "P1506", "P2906", "P3901", "P4302", "P4901", "P4903", "P5902", "P6901", "P7101", "P7105", "P8105"]}, {"operador": "Caio", "rua": "P", "acao": "LIMPAR", "qtd": 1, "posicoes": ["P4303"]}, {"operador": "Elisa", "rua": "G", "acao": "DAR ENTRADA", "qtd": 2, "posicoes": ["G6906", "G6203"]}, {"operador": "Bia", "rua": "B", "acao": "DAR ENTRADA", "qtd": 19, "posicoes": ["B0206", "B0602", "B0606", "B1206", "B1405", "B1406", "B0806", "B3206", "B4202", "B4203", "B6004", "B8805", "B1904", "B0106", "B3704", "B3702", "B2903", "B2705", "B2704"]}, {"operador": "Ravi", "rua": "I", "acao": "DAR ENTRADA", "qtd": 22, "posicoes": ["I1501", "I1701", "I3501", "I1901", "I2101", "I2301", "I2502", "I2501", "I7705", "I7706", "I8106", "I8502", "I6902", "I7104", "I7105", "I3406", "I3801", "I4806", "I6002", "I6003", "I8604", "I8605"]}, {"operador": "Ravi", "rua": "I", "acao": "LIMPAR", "qtd": 8, "posicoes": ["I3901", "I4101", "I4301", "I4701", "I4901", "I5301", "I5701", "I5901"]}], "conflicts": ["Lívia - Rua J: J3601 aparece em DAR ENTRADA e LIMPAR (INVERSAO - marcado para revisao/confirmacao no consolidado)", "Isadora - Rua O: O5603 aparece em DAR ENTRADA e LIMPAR (conflito - marcado para revisao/confirmacao no consolidado)"], "total_entrada": 212, "total_limpar": 24, "n_ruas": 19, "n_operadores": 13, "meta_base": "invent_rio_dia_0709.xlsx", "meta_ruas_relatadas": 19};
+
+const DATA2 = {"rua_rows": [
+  {"rua":"A","entrada":1,"limpar":0,"total":1,"operadores":["Nicolas"]},
+  {"rua":"C","entrada":0,"limpar":0,"total":0,"operadores":["Isadora"]},
+  {"rua":"D","entrada":1,"limpar":0,"total":1,"operadores":["Bia"]},
+  {"rua":"E","entrada":2,"limpar":0,"total":2,"operadores":["Caio"]},
+  {"rua":"F","entrada":0,"limpar":0,"total":0,"operadores":["Pietro"]},
+  {"rua":"G","entrada":2,"limpar":0,"total":2,"operadores":["Helena"]},
+  {"rua":"H","entrada":0,"limpar":0,"total":0,"operadores":["Bento"]},
+  {"rua":"I","entrada":10,"limpar":0,"total":10,"operadores":["Bia"]},
+  {"rua":"J","entrada":0,"limpar":0,"total":0,"operadores":["Pietro"]},
+  {"rua":"K","entrada":1,"limpar":0,"total":1,"operadores":["Caio"]},
+  {"rua":"L","entrada":3,"limpar":0,"total":3,"operadores":["Isadora"]},
+  {"rua":"M","entrada":2,"limpar":0,"total":2,"operadores":["Lívia"]},
+  {"rua":"N","entrada":3,"limpar":0,"total":3,"operadores":["Elisa","Bento"]},
+  {"rua":"O","entrada":0,"limpar":0,"total":0,"operadores":["Helena","Aline"]},
+  {"rua":"P","entrada":5,"limpar":0,"total":5,"operadores":["Nicolas"]},
+  {"rua":"Z","entrada":3,"limpar":0,"total":3,"operadores":["Lívia"]}
+], "op_rows": [
+  {"nome":"Caio","entrada":3,"limpar":0,"total":3,"ruas":["E","K"]},
+  {"nome":"Pietro","entrada":0,"limpar":0,"total":0,"ruas":["F","J"]},
+  {"nome":"Elisa / Bento","entrada":3,"limpar":0,"total":3,"ruas":["N"]},
+  {"nome":"Bento","entrada":0,"limpar":0,"total":0,"ruas":["H"]},
+  {"nome":"Isadora","entrada":3,"limpar":0,"total":3,"ruas":["C","L"]},
+  {"nome":"Lívia","entrada":5,"limpar":0,"total":5,"ruas":["Z","M"]},
+  {"nome":"Nicolas","entrada":6,"limpar":0,"total":6,"ruas":["A","P"]},
+  {"nome":"Helena","entrada":2,"limpar":0,"total":2,"ruas":["G","O"]},
+  {"nome":"Aline","entrada":0,"limpar":0,"total":0,"ruas":["O"]},
+  {"nome":"Bia","entrada":11,"limpar":0,"total":11,"ruas":["D","I"]}
+], "detail_rows": [
+  {"operador":"Nicolas","rua":"A","acao":"DAR ENTRADA","qtd":1,"posicoes":["A4806"]},
+  {"operador":"Lívia","rua":"Z","acao":"DAR ENTRADA","qtd":3,"posicoes":["Z2303","Z8105","Z8503"]},
+  {"operador":"Helena","rua":"G","acao":"DAR ENTRADA","qtd":2,"posicoes":["G0405","G0303"]},
+  {"operador":"Caio","rua":"E","acao":"DAR ENTRADA","qtd":2,"posicoes":["E6402","E6403"]},
+  {"operador":"Bia","rua":"D","acao":"DAR ENTRADA","qtd":1,"posicoes":["D2202"]},
+  {"operador":"Nicolas","rua":"P","acao":"DAR ENTRADA","qtd":5,"posicoes":["P2405","P2604","P6901","P8702","P8106"]},
+  {"operador":"Elisa / Bento","rua":"N","acao":"DAR ENTRADA","qtd":3,"posicoes":["N0705","N0901","N4301"]},
+  {"operador":"Bia","rua":"I","acao":"DAR ENTRADA","qtd":10,"posicoes":["I3701","I3901","I4101","I4301","I4701","I4901","I5301","I5901","I5701","I8203"]},
+  {"operador":"Lívia","rua":"M","acao":"DAR ENTRADA","qtd":2,"posicoes":["M0301","M4501"]},
+  {"operador":"Caio","rua":"K","acao":"DAR ENTRADA","qtd":1,"posicoes":["K8103"]},
+  {"operador":"Isadora","rua":"L","acao":"DAR ENTRADA","qtd":3,"posicoes":["L5902","L3403","L3006"]}
+], "conflicts": [], "total_entrada": 33, "total_limpar": 0, "n_ruas": 16, "n_operadores": 10, "meta_base": "Reconferência em campo (2ª contagem)", "meta_ruas_relatadas": 16};
+
+function fmtDate(){
+  const d = new Date();
+  return d.toLocaleDateString('pt-BR', {day:'2-digit',month:'2-digit',year:'numeric'}) + ' ' +
+         d.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
+}
+
+function sectionSkeleton(suf, label, tagClass, title, subtitleHtml){
+  return `
+  <span class="block-tag ${tagClass}">${label}</span>
+  <h1 class="block-title">${title}</h1>
+  <p class="subtitle">${subtitleHtml}</p>
+
+  <div class="filter-bar">
+    <span class="fb-item">Base: <b id="metaBase${suf}"></b></span>
+    <span class="fb-sep">·</span>
+    <span class="fb-item">Ruas cobertas: <b id="metaRuas${suf}"></b> de <b id="metaRuasRel${suf}"></b> relatadas</span>
+    <span class="fb-sep">·</span>
+    <span class="fb-item">Conferentes: <b id="metaOps${suf}"></b></span>
+    <span class="fb-sep">·</span>
+    <span class="fb-item">Gerado em <b id="metaDate${suf}"></b></span>
+  </div>
+
+  <section>
+    <h2 class="section-title">Resumo</h2>
+    <div class="kpi-strip">
+      <div class="kpi-cell"><div class="kpi-label">Posições registradas</div><div class="kpi-value" id="tileTotal${suf}">—</div><div class="kpi-sub">no total</div></div>
+      <div class="kpi-cell c-red"><div class="kpi-label">Dar entrada</div><div class="kpi-value" id="tileEntrada${suf}">—</div><div class="kpi-sub">estoque sem registro</div></div>
+      <div class="kpi-cell c-blue"><div class="kpi-label">Limpar</div><div class="kpi-value" id="tileLimpar${suf}">—</div><div class="kpi-sub">registro sem estoque</div></div>
+      <div class="kpi-cell"><div class="kpi-label">Ruas cobertas</div><div class="kpi-value" id="tileRuas${suf}">—</div><div class="kpi-sub">nesta etapa</div></div>
+      <div class="kpi-cell"><div class="kpi-label">Conferentes</div><div class="kpi-value" id="tileOps${suf}">—</div><div class="kpi-sub">em campo</div></div>
+      <div class="kpi-cell c-maroon"><div class="kpi-label">Conflitos</div><div class="kpi-value" id="tileConflitos${suf}">—</div><div class="kpi-sub">carecem confirmação</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="section-title">Posições por rua <span class="count-tag" id="chartCount${suf}"></span></h2>
+    <div class="chart-card">
+      <div class="chart-head">
+        <span class="ct">Volume de divergências</span>
+        <div class="legend">
+          <span><i style="background:var(--red)"></i> Dar entrada</span>
+          <span><i style="background:var(--blue)"></i> Limpar</span>
+        </div>
+      </div>
+      <div id="chartRows${suf}"></div>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="section-title">Por conferente</h2>
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr><th>Conferente</th><th>Ruas</th><th class="num">Dar entrada</th><th class="num">Limpar</th><th class="num">Total</th></tr>
+        </thead>
+        <tbody id="opTableBody${suf}"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="conflictSection${suf}">
+    <h2 class="section-title">Conflitos para revisão <span class="count-tag" id="conflictCount${suf}"></span></h2>
+    <div class="conflict-box" id="conflictBox${suf}"></div>
+  </section>
+
+  <section>
+    <h2 class="section-title">Detalhe por rua <span class="count-tag">clique para expandir as posições</span></h2>
+    <div id="detailAccordion${suf}"></div>
+  </section>
+
+  <section>
+    <h2 class="section-title">Lista completa · Dar entrada <span class="count-tag" id="listEntradaCount${suf}"></span></h2>
+    <div class="table-card">
+      <div class="list-search"><input type="text" id="searchEntrada${suf}" placeholder="Filtrar por rua, posição ou conferente..."></div>
+      <table>
+        <thead><tr><th>Rua</th><th>Posição / Endereço</th><th>Conferente</th></tr></thead>
+        <tbody id="listEntradaBody${suf}"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="section-title">Lista completa · Limpar <span class="count-tag" id="listLimparCount${suf}"></span></h2>
+    <div class="table-card">
+      <div class="list-search"><input type="text" id="searchLimpar${suf}" placeholder="Filtrar por rua, posição ou conferente..."></div>
+      <table>
+        <thead><tr><th>Rua</th><th>Posição / Endereço</th><th>Conferente</th></tr></thead>
+        <tbody id="listLimparBody${suf}"></tbody>
+      </table>
+    </div>
+  </section>
+  `;
+}
+
+function renderReport(DATA, suf){
+  document.getElementById('metaBase'+suf).textContent = DATA.meta_base;
+  document.getElementById('metaRuas'+suf).textContent = DATA.n_ruas;
+  document.getElementById('metaRuasRel'+suf).textContent = DATA.meta_ruas_relatadas;
+  document.getElementById('metaOps'+suf).textContent = DATA.n_operadores;
+  document.getElementById('metaDate'+suf).textContent = fmtDate();
+
+  document.getElementById('tileTotal'+suf).textContent = DATA.total_entrada + DATA.total_limpar;
+  document.getElementById('tileEntrada'+suf).textContent = DATA.total_entrada;
+  document.getElementById('tileLimpar'+suf).textContent = DATA.total_limpar;
+  document.getElementById('tileRuas'+suf).textContent = DATA.n_ruas;
+  document.getElementById('tileOps'+suf).textContent = DATA.n_operadores;
+  document.getElementById('tileConflitos'+suf).textContent = DATA.conflicts.length;
+  document.getElementById('chartCount'+suf).textContent = '(' + DATA.n_ruas + ' ruas, ordenado por volume)';
+  document.getElementById('conflictCount'+suf).textContent = '(' + DATA.conflicts.length + ')';
+
+  // chart
+  const ruaSorted = [...DATA.rua_rows].sort((a,b)=>b.total-a.total);
+  const maxTotal = Math.max(1, ...ruaSorted.map(r=>r.total));
+  const chartRows = document.getElementById('chartRows'+suf);
+  ruaSorted.forEach(r=>{
+    const row = document.createElement('div');
+    if(r.total === 0){
+      row.className = 'bar-row zero';
+      row.innerHTML = `
+        <div class="rua-label">${r.rua}</div>
+        <div class="bar-track"><span class="ok-tag">Sem divergências</span></div>
+        <div class="total">0</div>
+      `;
+    } else {
+      row.className = 'bar-row';
+      const wEntrada = (r.entrada/maxTotal*100);
+      const wLimpar = (r.limpar/maxTotal*100);
+      const entradaLabel = wEntrada >= 6 ? `<span class="seg-val">${r.entrada}</span>` : '';
+      const limparLabel = wLimpar >= 6 ? `<span class="seg-val">${r.limpar}</span>` : '';
+      row.innerHTML = `
+        <div class="rua-label">${r.rua}</div>
+        <div class="bar-track">
+          <div class="bar-seg entrada" style="width:${wEntrada.toFixed(1)}%">${entradaLabel}</div>
+          <div class="bar-seg limpar" style="width:${wLimpar.toFixed(1)}%">${limparLabel}</div>
+        </div>
+        <div class="total">${r.total}</div>
+      `;
+    }
+    chartRows.appendChild(row);
+  });
+
+  // operator table
+  const opSorted = [...DATA.op_rows].sort((a,b)=>b.total-a.total);
+  const opBody = document.getElementById('opTableBody'+suf);
+  opSorted.forEach(o=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="name">${o.nome}</td>
+      <td><div class="ruas-tags">${o.ruas.map(r=>`<span class="rua-chip">${r}</span>`).join('')}</div></td>
+      <td class="num">${o.entrada}</td>
+      <td class="num">${o.limpar}</td>
+      <td class="num">${o.total}</td>
+    `;
+    opBody.appendChild(tr);
+  });
+  const trTotal = document.createElement('tr');
+  trTotal.className = 'total-row';
+  trTotal.innerHTML = `<td colspan="2">Total geral</td><td class="num">${DATA.total_entrada}</td><td class="num">${DATA.total_limpar}</td><td class="num">${DATA.total_entrada + DATA.total_limpar}</td>`;
+  opBody.appendChild(trTotal);
+
+  // conflicts
+  const conflictBox = document.getElementById('conflictBox'+suf);
+  if(DATA.conflicts.length === 0){
+    conflictBox.innerHTML = '<div class="empty-note">Nenhum conflito identificado nesta etapa.</div>';
+  } else {
+    DATA.conflicts.forEach(c=>{
+      const div = document.createElement('div');
+      div.className='conflict-item';
+      div.innerHTML = `<span class="dot">&#9650;</span><span>${c}</span>`;
+      conflictBox.appendChild(div);
+    });
+  }
+
+  // detail accordion (built from rua_rows so zero-divergence ruas still show)
+  const detailWrap = document.getElementById('detailAccordion'+suf);
+  [...DATA.rua_rows].sort((a,b)=>a.rua.localeCompare(b.rua)).forEach(r=>{
+    const entradaPos = [];
+    const limparPos = [];
+    DATA.detail_rows.filter(row=>row.rua === r.rua).forEach(row=>{
+      if(row.acao === 'DAR ENTRADA') entradaPos.push(...row.posicoes);
+      else limparPos.push(...row.posicoes);
+    });
+    const det = document.createElement('details');
+    const badges = r.total === 0
+      ? `<span class="badge ok">OK</span>`
+      : `${entradaPos.length ? `<span class="badge entrada">${entradaPos.length} entrada</span>` : ''}${limparPos.length ? `<span class="badge limpar">${limparPos.length} limpar</span>` : ''}`;
+    det.innerHTML = `
+      <summary>
+        <span class="rua-name">Rua ${r.rua}</span>
+        <span class="op-tag">${r.operadores.join(', ')}</span>
+        <span class="badges">${badges}</span>
+      </summary>
+      <div class="detail-body">
+        ${entradaPos.length ? `<div class="pos-group"><div class="glabel">Dar entrada</div><div class="pos-list">${entradaPos.map(p=>`<span class="pos-chip entrada">${p}</span>`).join('')}</div></div>` : ''}
+        ${limparPos.length ? `<div class="pos-group"><div class="glabel">Limpar</div><div class="pos-list">${limparPos.map(p=>`<span class="pos-chip limpar">${p}</span>`).join('')}</div></div>` : ''}
+        ${r.total === 0 ? `<div class="no-diverg">Nenhuma divergência encontrada nesta rua.</div>` : ''}
+      </div>
+    `;
+    detailWrap.appendChild(det);
+  });
+
+  // flat lists
+  const flatEntrada = [];
+  const flatLimpar = [];
+  DATA.detail_rows.forEach(row=>{
+    const target = row.acao === 'DAR ENTRADA' ? flatEntrada : flatLimpar;
+    row.posicoes.forEach(p=> target.push({rua:row.rua, pos:p, op:row.operador}));
+  });
+  flatEntrada.sort((a,b)=> a.rua.localeCompare(b.rua) || a.pos.localeCompare(b.pos));
+  flatLimpar.sort((a,b)=> a.rua.localeCompare(b.rua) || a.pos.localeCompare(b.pos));
+
+  function fillList(bodyId, countId, rows){
+    document.getElementById(countId).textContent = '(' + rows.length + ' endereços)';
+    const body = document.getElementById(bodyId);
+    rows.forEach(r=>{
+      const tr = document.createElement('tr');
+      tr.dataset.search = (r.rua + ' ' + r.pos + ' ' + r.op).toLowerCase();
+      tr.innerHTML = `<td class="rua-cell">${r.rua}</td><td class="pos-cell">${r.pos}</td><td>${r.op}</td>`;
+      body.appendChild(tr);
+    });
+  }
+  fillList('listEntradaBody'+suf, 'listEntradaCount'+suf, flatEntrada);
+  fillList('listLimparBody'+suf, 'listLimparCount'+suf, flatLimpar);
+
+  function wireSearch(inputId, bodyId){
+    const input = document.getElementById(inputId);
+    const body = document.getElementById(bodyId);
+    input.addEventListener('input', ()=>{
+      const q = input.value.trim().toLowerCase();
+      [...body.children].forEach(tr=>{
+        tr.classList.toggle('hide', q && !tr.dataset.search.includes(q));
+      });
+    });
+  }
+  wireSearch('searchEntrada'+suf, 'listEntradaBody'+suf);
+  wireSearch('searchLimpar'+suf, 'listLimparBody'+suf);
+}
+
+document.getElementById('report1').innerHTML = sectionSkeleton('1', '1ª Contagem', 'c1', 'Resultado da 1ª Contagem',
+  'Divergências reportadas pelos conferentes em campo na primeira contagem, referentes à base <b>invent_rio_dia_0709.xlsx</b>: posições a <b>dar entrada</b> e a <b>limpar</b>.');
+document.getElementById('report2').innerHTML = sectionSkeleton('2', '2ª Contagem', 'c2', 'Resultado da 2ª Contagem',
+  'Reconferência em campo das posições pendentes após a 1ª contagem. Ruas sem divergências foram confirmadas como <b>"tudo certo"</b> pelo conferente.');
+
+renderReport(DATA1, '1');
+renderReport(DATA2, '2');
+
+document.getElementById('metaDateFooter').textContent = 'Consolidado gerado automaticamente a partir dos registros de contagem cega enviados em campo (1ª e 2ª contagem) · ' + fmtDate();
+</script>

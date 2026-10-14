@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ORION // Centro de Comando Logístico</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --void:#04060b;
+  --void-2:#070b14;
+  --panel:rgba(11,18,32,0.55);
+  --panel-solid:#0a1120;
+  --line:rgba(0,229,255,0.14);
+  --line-soft:rgba(0,229,255,0.06);
+  --blue:#22e3ff;
+  --blue-deep:#0086ff;
+  --blue-dim:#5c8aa8;
+  --red:#ff3355;
+  --red-deep:#c8102e;
+  --amber:#ffb020;
+  --green:#2bffa8;
+  --text:#dff3ff;
+  --text-dim:#7d93a8;
+  --text-faint:#4a5b6e;
+  --radius:2px;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;}
+html{scroll-padding-top:env(safe-area-inset-top,0px);}
+html,body{height:100%;}
+body{
+  margin:0;
+  background:var(--void);
+  color:var(--text);
+  font-family:'Rajdhani',sans-serif;
+  overflow-x:hidden;
+  position:relative;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:var(--blue);color:#001019;}
+
+/* ---------- background layers ---------- */
+#bgCanvas{position:fixed;inset:0;z-index:0;opacity:0.55;}
+.bg-vignette{
+  position:fixed;inset:0;z-index:1;pointer-events:none;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(0,150,255,0.10), transparent 55%),
+    radial-gradient(ellipse at 85% 95%, rgba(255,30,60,0.10), transparent 50%),
+    radial-gradient(ellipse at 50% 50%, transparent 40%, rgba(0,0,0,0.75) 100%);
+}
+.bg-grid{
+  position:fixed;inset:0;z-index:1;pointer-events:none;
+  background-image:
+    linear-gradient(var(--line-soft) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line-soft) 1px, transparent 1px);
+  background-size:48px 48px;
+  mask-image:radial-gradient(ellipse at 50% 30%, black 0%, transparent 75%);
+  -webkit-mask-image:radial-gradient(ellipse at 50% 30%, black 0%, transparent 75%);
+}
+.scanline{
+  position:fixed;inset:0;z-index:2;pointer-events:none;
+  background:repeating-linear-gradient(0deg, rgba(255,255,255,0.018) 0px, rgba(255,255,255,0.018) 1px, transparent 1px, transparent 3px);
+  mix-blend-mode:overlay;
+}
+.noise-sweep{
+  position:fixed;left:0;right:0;height:140px;z-index:2;pointer-events:none;
+  background:linear-gradient(180deg, transparent, rgba(34,227,255,0.05), transparent);
+  animation:sweep 7s linear infinite;
+}
+@keyframes sweep{0%{top:-140px}100%{top:100%}}
+
+/* ---------- shell ---------- */
+.shell{position:relative;z-index:3;max-width:1680px;margin:0 auto;padding:18px 22px 60px;}
+
+/* ---------- topbar ---------- */
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 20px;margin-bottom:16px;
+  background:linear-gradient(180deg, rgba(14,22,38,0.75), rgba(8,13,23,0.55));
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  backdrop-filter:blur(14px);
+  position:relative;
+  overflow:hidden;
+}
+.topbar::before{
+  content:"";position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg, transparent, var(--blue), var(--red), transparent);
+  animation:scanbar 4s ease-in-out infinite;
+}
+@keyframes scanbar{0%,100%{opacity:0.4}50%{opacity:1}}
+.brand{display:flex;align-items:center;gap:14px;}
+.brand-mark{
+  width:38px;height:38px;position:relative;
+  border:1px solid var(--blue);
+  transform:rotate(45deg);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 18px rgba(34,227,255,0.5), inset 0 0 12px rgba(34,227,255,0.25);
+}
+.brand-mark::after{content:"";width:10px;height:10px;background:var(--blue);box-shadow:0 0 10px var(--blue);transform:rotate(-45deg);}
+.brand-text h1{
+  font-family:'Orbitron',sans-serif;font-weight:900;font-size:19px;letter-spacing:4px;
+  margin:0;color:#fff;text-shadow:0 0 18px rgba(34,227,255,0.55);
+}
+.brand-text p{margin:2px 0 0;font-size:12px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;}
+.topbar-right{display:flex;align-items:center;gap:26px;}
+.status-chip{display:flex;align-items:center;gap:8px;font-size:12px;letter-spacing:1.5px;color:var(--text-dim);text-transform:uppercase;}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 1.8s ease-in-out infinite;}
+.dot.red{background:var(--red);box-shadow:0 0 8px var(--red);}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.55;transform:scale(0.8);}}
+.clock{font-family:'JetBrains Mono',monospace;font-size:16px;color:var(--blue);letter-spacing:1px;text-shadow:0 0 10px rgba(34,227,255,0.5);}
+.clock small{display:block;font-size:10px;color:var(--text-faint);font-family:'Rajdhani',sans-serif;letter-spacing:2px;text-align:right;}
+
+/* ---------- panel base ---------- */
+.panel{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  backdrop-filter:blur(14px);
+  position:relative;
+  padding:16px 18px 18px;
+}
+.panel::before{
+  content:"";position:absolute;top:-1px;left:14px;width:60px;height:2px;background:var(--blue);box-shadow:0 0 8px var(--blue);
+}
+.panel-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px;}
+.panel-head h2{
+  font-family:'Orbitron',sans-serif;font-size:12px;letter-spacing:3px;text-transform:uppercase;
+  margin:0;color:var(--text);font-weight:700;
+}
+.panel-head span{font-size:11px;color:var(--text-faint);letter-spacing:1px;}
+
+/* ---------- KPI row ---------- */
+.kpi-row{
+  display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-bottom:16px;
+  perspective:1200px;
+}
+.kpi{
+  padding:16px 16px 14px;
+  border:1px solid var(--line);
+  background:linear-gradient(160deg, rgba(16,26,44,0.7), rgba(8,12,22,0.55));
+  border-radius:var(--radius);
+  position:relative;
+  transform-style:preserve-3d;
+  animation:floaty 6s ease-in-out infinite;
+  transition:transform 0.2s ease, box-shadow 0.2s ease;
+  cursor:default;
+}
+.kpi:hover{box-shadow:0 18px 40px -12px rgba(34,227,255,0.35);}
+.kpi:nth-child(2){animation-delay:-1s;}
+.kpi:nth-child(3){animation-delay:-2s;}
+.kpi:nth-child(4){animation-delay:-3s;}
+.kpi:nth-child(5){animation-delay:-4s;}
+.kpi:nth-child(6){animation-delay:-5s;}
+@keyframes floaty{0%,100%{transform:translateY(0px) rotateX(0deg);}50%{transform:translateY(-5px) rotateX(1.5deg);}}
+.kpi .kpi-label{font-size:11px;letter-spacing:1.5px;color:var(--text-dim);text-transform:uppercase;display:flex;justify-content:space-between;align-items:center;}
+.kpi .kpi-value{
+  font-family:'Orbitron',sans-serif;font-weight:700;font-size:30px;margin:8px 0 4px;color:#fff;
+  text-shadow:0 0 16px rgba(34,227,255,0.4);
+  display:flex;align-items:baseline;gap:5px;
+}
+.kpi .kpi-value small{font-size:14px;color:var(--text-dim);font-weight:500;}
+.kpi .kpi-trend{font-size:11px;font-weight:600;letter-spacing:0.5px;}
+.kpi .kpi-trend.up{color:var(--green);}
+.kpi .kpi-trend.down{color:var(--red);}
+.kpi .kpi-bar{height:3px;width:100%;background:rgba(255,255,255,0.06);margin-top:10px;overflow:hidden;}
+.kpi .kpi-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--blue-deep),var(--blue));box-shadow:0 0 6px var(--blue);}
+.kpi.warn .kpi-bar i{background:linear-gradient(90deg,var(--red-deep),var(--red));box-shadow:0 0 6px var(--red);}
+.kpi-icon{position:absolute;top:14px;right:14px;width:16px;height:16px;opacity:0.65;}
+
+/* ---------- main grid ---------- */
+.grid-main{display:grid;grid-template-columns:300px 1fr 340px;gap:16px;align-items:start;}
+.col{display:flex;flex-direction:column;gap:16px;}
+
+/* ---------- digital twin ---------- */
+.twin{min-height:430px;}
+.twin-canvas-wrap{position:relative;height:390px;border:1px solid var(--line-soft);background:radial-gradient(ellipse at 50% 40%, rgba(0,80,140,0.12), transparent 70%);overflow:hidden;}
+.twin-canvas-wrap svg{width:100%;height:100%;display:block;}
+.twin-legend{position:absolute;bottom:10px;left:12px;display:flex;gap:14px;font-size:10px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase;}
+.twin-legend span{display:flex;align-items:center;gap:5px;}
+.twin-legend i{width:8px;height:8px;display:inline-block;border-radius:1px;}
+.twin-hud{position:absolute;top:10px;right:12px;text-align:right;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--blue-dim);line-height:1.6;}
+
+/* ---------- dock panel ---------- */
+.dock-list{display:flex;flex-direction:column;gap:8px;max-height:330px;overflow-y:auto;padding-right:2px;}
+.dock-list::-webkit-scrollbar{width:4px;}
+.dock-list::-webkit-scrollbar-thumb{background:var(--line);}
+.dock-row{
+  display:grid;grid-template-columns:34px 1fr auto;align-items:center;gap:10px;
+  padding:8px 10px;border:1px solid var(--line-soft);background:rgba(255,255,255,0.02);
+  font-size:12px;
+}
+.dock-id{font-family:'JetBrains Mono',monospace;color:var(--text-dim);font-size:11px;}
+.dock-status{font-size:10px;text-transform:uppercase;letter-spacing:1px;font-weight:600;padding:3px 7px;border-radius:2px;text-align:center;white-space:nowrap;}
+.dock-status.loading{background:rgba(34,227,255,0.12);color:var(--blue);border:1px solid rgba(34,227,255,0.35);}
+.dock-status.free{background:rgba(43,255,168,0.1);color:var(--green);border:1px solid rgba(43,255,168,0.3);}
+.dock-status.maint{background:rgba(255,51,85,0.12);color:var(--red);border:1px solid rgba(255,51,85,0.35);}
+.dock-meta{color:var(--text-dim);font-size:11px;}
+.dock-name{color:var(--text);font-weight:600;font-size:12.5px;}
+
+/* ---------- gauges ---------- */
+.gauge-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.gauge{text-align:center;}
+.gauge svg{width:100%;height:auto;}
+.gauge-label{font-size:11px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase;margin-top:2px;}
+.gauge-value{font-family:'Orbitron',sans-serif;font-size:18px;font-weight:700;fill:#fff;}
+
+/* ---------- truck tracking ---------- */
+.truck-map{position:relative;height:210px;border:1px solid var(--line-soft);overflow:hidden;background:linear-gradient(180deg, rgba(10,16,28,0.4), rgba(6,10,18,0.6));}
+.truck-map svg{width:100%;height:100%;}
+.truck-list{display:flex;flex-direction:column;gap:7px;margin-top:12px;}
+.truck-item{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;font-size:11.5px;padding:6px 8px;border-left:2px solid var(--blue);background:rgba(34,227,255,0.04);}
+.truck-item.alert{border-left-color:var(--red);background:rgba(255,51,85,0.05);}
+.truck-item b{color:var(--text);font-size:12px;}
+.truck-eta{font-family:'JetBrains Mono',monospace;color:var(--blue-dim);font-size:11px;}
+
+/* ---------- AI insights ---------- */
+.ai-item{padding:10px 12px;border:1px solid var(--line-soft);background:rgba(255,255,255,0.02);margin-bottom:9px;position:relative;}
+.ai-item:last-child{margin-bottom:0;}
+.ai-item .ai-tag{font-size:9.5px;letter-spacing:1.5px;text-transform:uppercase;font-weight:700;color:var(--blue);margin-bottom:5px;display:inline-block;}
+.ai-item.risk .ai-tag{color:var(--red);}
+.ai-item.opp .ai-tag{color:var(--green);}
+.ai-item p{margin:0 0 8px;font-size:12.5px;line-height:1.45;color:var(--text);}
+.confidence{display:flex;align-items:center;gap:7px;}
+.confidence .track{flex:1;height:3px;background:rgba(255,255,255,0.08);}
+.confidence .track i{display:block;height:100%;background:var(--blue);}
+.ai-item.risk .confidence .track i{background:var(--red);}
+.confidence span{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text-faint);}
+
+/* ---------- predictive chart ---------- */
+.predict-chart{height:180px;}
+.predict-chart svg{width:100%;height:100%;}
+.predict-legend{display:flex;gap:16px;margin-top:8px;font-size:10.5px;color:var(--text-dim);letter-spacing:0.5px;}
+.predict-legend span{display:flex;align-items:center;gap:5px;}
+.predict-legend i{width:12px;height:2px;display:inline-block;}
+
+/* ---------- flow footer strip ---------- */
+.flow-strip{margin-top:16px;padding:14px 18px;}
+.flow-track{position:relative;height:70px;}
+.flow-track svg{width:100%;height:100%;}
+.flow-nodes{display:flex;justify-content:space-between;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text-dim);margin-top:6px;}
+
+@media (max-width:1180px){
+  .grid-main{grid-template-columns:1fr;}
+  .kpi-row{grid-template-columns:repeat(3,1fr);}
+}
+@media (max-width:640px){
+  .kpi-row{grid-template-columns:repeat(2,1fr);}
+  .topbar{flex-wrap:wrap;gap:10px;}
+}
+</style>
+</head>
+<body>
+
+<canvas id="bgCanvas"></canvas>
+<div class="bg-grid"></div>
+<div class="bg-vignette"></div>
+<div class="scanline"></div>
+<div class="noise-sweep"></div>
+
+<div class="shell">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <div class="brand-text">
+        <h1>ORION // COMANDO LOGÍSTICO</h1>
+        <p>Filial CDA · Digital Twin Operacional</p>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="status-chip"><span class="dot"></span> SISTEMA ONLINE</div>
+      <div class="status-chip"><span class="dot red"></span> 3 ALERTAS ATIVOS</div>
+      <div class="clock" id="clockTime">00:00:00<small id="clockDate">--/--/----</small></div>
+    </div>
+  </div>
+
+  <!-- KPI ROW -->
+  <div class="kpi-row" id="kpiRow">
+    <div class="kpi">
+      <div class="kpi-label">Pedidos Processados <svg class="kpi-icon" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="1.5"><path d="M3 7h18M3 12h18M3 17h18"/></svg></div>
+      <div class="kpi-value" id="kv1">4.812</div>
+      <div class="kpi-trend up">▲ 6.4% vs ontem</div>
+      <div class="kpi-bar"><i style="width:78%"></i></div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Docas Ativas <svg class="kpi-icon" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="1.5"><rect x="3" y="6" width="18" height="12" rx="1"/></svg></div>
+      <div class="kpi-value">9 <small>/ 12</small></div>
+      <div class="kpi-trend up">▲ 2 desde 08h</div>
+      <div class="kpi-bar"><i style="width:75%"></i></div>
+    </div>
+    <div class="kpi warn">
+      <div class="kpi-label">Ocupação Armazém <svg class="kpi-icon" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="1.5"><path d="M4 21V9l8-6 8 6v12"/></svg></div>
+      <div class="kpi-value">91<small>%</small></div>
+      <div class="kpi-trend down">▲ acima do ideal</div>
+      <div class="kpi-bar"><i style="width:91%"></i></div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">SLA de Entrega <svg class="kpi-icon" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div>
+      <div class="kpi-value">96,2<small>%</small></div>
+      <div class="kpi-trend up">▲ 1.1pp</div>
+      <div class="kpi-bar"><i style="width:96%"></i></div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Veículos em Trânsito <svg class="kpi-icon" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="1.5"><path d="M3 13l1-5h13l2 5M5 13h14v5H5z"/></svg></div>
+      <div class="kpi-value" id="kv5">27</div>
+      <div class="kpi-trend up">▲ 4 novas rotas</div>
+      <div class="kpi-bar"><i style="width:64%"></i></div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Eficiência de Picking <svg class="kpi-icon" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="1.5"><path d="M4 4h16v16H4z"/><path d="M4 10h16M10 4v16"/></svg></div>
+      <div class="kpi-value">88<small>%</small></div>
+      <div class="kpi-trend down">▼ 1.8pp</div>
+      <div class="kpi-bar"><i style="width:88%"></i></div>
+    </div>
+  </div>
+
+  <!-- MAIN GRID -->
+  <div class="grid-main">
+
+    <!-- LEFT COLUMN -->
+    <div class="col">
+      <div class="panel">
+        <div class="panel-head"><h2>Gestão de Docas</h2><span>12 posições</span></div>
+        <div class="dock-list" id="dockList"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head"><h2>Capacidade dos Armazéns</h2><span>tempo real</span></div>
+        <div class="gauge-grid" id="gaugeGrid"></div>
+      </div>
+    </div>
+
+    <!-- CENTER COLUMN -->
+    <div class="col">
+      <div class="panel twin">
+        <div class="panel-head"><h2>Digital Twin · Fluxo da Operação</h2><span>Filial CDA — planta baixa</span></div>
+        <div class="twin-canvas-wrap">
+          <svg id="twinSvg" viewBox="0 0 760 380" preserveAspectRatio="xMidYMid meet"></svg>
+          <div class="twin-hud" id="twinHud">
+            NÓS ATIVOS: 6<br>
+            THROUGHPUT: <span id="hudTp">1.240</span> un/h<br>
+            LATÊNCIA MÉDIA: 4,2 min
+          </div>
+          <div class="twin-legend">
+            <span><i style="background:var(--blue)"></i>Fluxo Normal</span>
+            <span><i style="background:var(--red)"></i>Gargalo</span>
+            <span><i style="background:var(--green)"></i>Expedido</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head"><h2>Rastreamento de Frota</h2><span>27 veículos ativos</span></div>
+        <div class="truck-map">
+          <svg id="truckSvg" viewBox="0 0 700 210" preserveAspectRatio="xMidYMid meet"></svg>
+        </div>
+        <div class="truck-list">
+          <div class="truck-item"><b>CRT-1182</b><span>Rota CDA → CD Osasco</span><span class="truck-eta">ETA 00:42</span></div>
+          <div class="truck-item alert"><b>CRT-0937</b><span>Rota CDA → CD Contagem</span><span class="truck-eta">ATRASO +18min</span></div>
+          <div class="truck-item"><b>CRT-1204</b><span>Rota CDA → CD Salvador</span><span class="truck-eta">ETA 02:15</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div class="col">
+      <div class="panel">
+        <div class="panel-head"><h2>Insights de IA</h2><span>motor preditivo</span></div>
+
+        <div class="ai-item risk">
+          <span class="ai-tag">Risco Operacional</span>
+          <p>Doca 07 tende a formar fila até 15h caso o ritmo atual de chegada de carretas se mantenha.</p>
+          <div class="confidence"><div class="track"><i style="width:87%"></i></div><span>87%</span></div>
+        </div>
+
+        <div class="ai-item">
+          <span class="ai-tag">Anomalia Detectada</span>
+          <p>Divergência de saldo identificada entre armazéns 10 e 01 acima do padrão histórico da semana.</p>
+          <div class="confidence"><div class="track"><i style="width:74%"></i></div><span>74%</span></div>
+        </div>
+
+        <div class="ai-item opp">
+          <span class="ai-tag">Oportunidade</span>
+          <p>Redistribuir 2 conferentes do turno tarde para picking reduziria o tempo de ciclo em ~9%.</p>
+          <div class="confidence"><div class="track"><i style="width:81%"></i></div><span>81%</span></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head"><h2>Analytics Preditivo</h2><span>próximas 6h</span></div>
+        <div class="predict-chart"><svg id="predictSvg" viewBox="0 0 320 160" preserveAspectRatio="none"></svg></div>
+        <div class="predict-legend">
+          <span><i style="background:var(--blue)"></i>Volume real</span>
+          <span><i style="background:var(--red);opacity:0.8"></i>Projeção IA</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FLOW STRIP -->
+  <div class="panel flow-strip">
+    <div class="panel-head"><h2>Cadeia de Suprimentos — Fluxo Animado</h2><span>recebimento → expedição</span></div>
+    <div class="flow-track"><svg id="flowSvg" viewBox="0 0 1200 70" preserveAspectRatio="none"></svg></div>
+    <div class="flow-nodes">
+      <span>Recebimento</span><span>Conferência</span><span>Armazenagem</span><span>Picking</span><span>Expedição</span><span>Transporte</span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ================= CLOCK ================= */
+function tickClock(){
+  const now = new Date();
+  document.getElementById('clockTime').childNodes[0].nodeValue =
+    now.toLocaleTimeString('pt-BR',{hour12:false});
+  document.getElementById('clockDate').textContent =
+    now.toLocaleDateString('pt-BR');
+}
+tickClock(); setInterval(tickClock, 1000);
+
+/* ================= BG PARTICLE GRID ================= */
+const cv = document.getElementById('bgCanvas');
+const ctx = cv.getContext('2d');
+let W,H,particles=[];
+function resize(){
+  W = cv.width = window.innerWidth;
+  H = cv.height = window.innerHeight;
+}
+resize(); window.addEventListener('resize', resize);
+const N = 60;
+for(let i=0;i<N;i++){
+  particles.push({
+    x:Math.random()*1600, y:Math.random()*1000,
+    vx:(Math.random()-0.5)*0.15, vy:(Math.random()-0.5)*0.15,
+    r:Math.random()*1.4+0.3,
+    c: Math.random()>0.75 ? 'rgba(255,51,85,' : 'rgba(34,227,255,'
+  });
+}
+function animateBg(){
+  ctx.clearRect(0,0,W,H);
+  for(const p of particles){
+    p.x += p.vx; p.y += p.vy;
+    if(p.x<0)p.x=W; if(p.x>W)p.x=0;
+    if(p.y<0)p.y=H; if(p.y>H)p.y=0;
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.fillStyle = p.c+'0.55)';
+    ctx.shadowBlur = 6; ctx.shadowColor = p.c+'0.8)';
+    ctx.fill();
+  }
+  // connecting lines
+  for(let i=0;i<particles.length;i++){
+    for(let j=i+1;j<particles.length;j++){
+      const a=particles[i], b=particles[j];
+      const d = Math.hypot(a.x-b.x, a.y-b.y);
+      if(d<110){
+        ctx.beginPath();
+        ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y);
+        ctx.strokeStyle = 'rgba(34,227,255,'+(0.12*(1-d/110))+')';
+        ctx.lineWidth=0.6; ctx.shadowBlur=0;
+        ctx.stroke();
+      }
+    }
+  }
+  requestAnimationFrame(animateBg);
+}
+animateBg();
+
+/* ================= DOCK LIST ================= */
+const dockNames = ['Recebimento A','Recebimento B','Expedição B2B','Expedição B2B','Expedição B2C','Expedição B2C',
+  'Devolução','Cross-Dock','Expedição B2B','Manutenção','Expedição B2C','Reserva'];
+const dockStatuses = ['loading','loading','free','loading','loading','maint','free','loading','loading','maint','free','free'];
+const dockLabels = {loading:'Carregando',free:'Livre',maint:'Manutenção'};
+const dockList = document.getElementById('dockList');
+dockNames.forEach((name,i)=>{
+  const st = dockStatuses[i];
+  const row = document.createElement('div');
+  row.className='dock-row';
+  row.innerHTML = `
+    <div class="dock-id">D${String(i+1).padStart(2,'0')}</div>
+    <div>
+      <div class="dock-name">${name}</div>
+      <div class="dock-meta">${st==='loading' ? 'Carreta '+ (5000+i*37) : (st==='maint' ? 'Previsão 2h' : 'Disponível')}</div>
+    </div>
+    <div class="dock-status ${st}">${dockLabels[st]}</div>
+  `;
+  dockList.appendChild(row);
+});
+
+/* ================= GAUGES ================= */
+const gaugeData = [
+  {label:'Armazém 01 — Geral', value:78, color:'var(--blue)'},
+  {label:'Armazém 10 — Produção', value:54, color:'var(--blue)'},
+  {label:'Doca de Devolução', value:91, color:'var(--red)'},
+  {label:'Área de Picking', value:66, color:'var(--blue)'}
+];
+const gaugeGrid = document.getElementById('gaugeGrid');
+gaugeData.forEach(g=>{
+  const r=40, c=2*Math.PI*r;
+  const off = c - (g.value/100)*c;
+  const wrap = document.createElement('div');
+  wrap.className='gauge';
+  wrap.innerHTML = `
+    <svg viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="${r}" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="7"/>
+      <circle cx="50" cy="50" r="${r}" fill="none" stroke="${g.color}" stroke-width="7"
+        stroke-dasharray="${c}" stroke-dashoffset="${c}" stroke-linecap="round"
+        transform="rotate(-90 50 50)" style="filter:drop-shadow(0 0 5px ${g.color});
+        transition:stroke-dashoffset 1.4s cubic-bezier(.2,.8,.2,1);" class="gauge-arc" data-off="${off}"/>
+      <text x="50" y="55" text-anchor="middle" class="gauge-value">${g.value}%</text>
+    </svg>
+    <div class="gauge-label">${g.label}</div>
+  `;
+  gaugeGrid.appendChild(wrap);
+});
+setTimeout(()=>{
+  document.querySelectorAll('.gauge-arc').forEach(a=>{
+    a.style.strokeDashoffset = a.getAttribute('data-off');
+  });
+}, 200);
+
+/* ================= DIGITAL TWIN SVG ================= */
+const twinSvg = document.getElementById('twinSvg');
+const nodes = [
+  {id:'recv', x:70, y:190, label:'Recebimento'},
+  {id:'conf', x:230, y:90, label:'Conferência'},
+  {id:'arm10', x:230, y:290, label:'Armazém 10'},
+  {id:'arm01', x:420, y:190, label:'Armazém 01'},
+  {id:'pick', x:590, y:100, label:'Picking'},
+  {id:'exp', x:590, y:290, label:'Expedição'},
+  {id:'dock', x:710, y:190, label:'Docas'}
+];
+const edges = [
+  ['recv','conf', false], ['recv','arm10', false],
+  ['conf','arm01', false], ['arm10','arm01', true],
+  ['arm01','pick', false], ['arm01','exp', false],
+  ['pick','dock', false], ['exp','dock', false]
+];
+function nodeById(id){ return nodes.find(n=>n.id===id); }
+let svgMarkup = '';
+edges.forEach(([a,b,bottleneck],i)=>{
+  const na=nodeById(a), nb=nodeById(b);
+  const color = bottleneck ? 'var(--red)' : 'var(--blue)';
+  svgMarkup += `<path d="M${na.x},${na.y} C${(na.x+nb.x)/2},${na.y} ${(na.x+nb.x)/2},${nb.y} ${nb.x},${nb.y}"
+    fill="none" stroke="${color}" stroke-width="1.4" opacity="0.55"/>`;
+  svgMarkup += `<circle r="3" fill="${color}" opacity="0.95" style="filter:drop-shadow(0 0 4px ${color})">
+    <animateMotion dur="${bottleneck ? 5.5 : 3}s" repeatCount="indefinite"
+      path="M${na.x},${na.y} C${(na.x+nb.x)/2},${na.y} ${(na.x+nb.x)/2},${nb.y} ${nb.x},${nb.y}" begin="${i*0.3}s"/>
+  </circle>`;
+});
+nodes.forEach(n=>{
+  svgMarkup += `
+    <g>
+      <circle cx="${n.x}" cy="${n.y}" r="20" fill="rgba(10,20,35,0.85)" stroke="var(--blue)" stroke-width="1.2" opacity="0.9"/>
+      <circle cx="${n.x}" cy="${n.y}" r="20" fill="none" stroke="var(--blue)" stroke-width="1" opacity="0.4">
+        <animate attributeName="r" values="20;27;20" dur="3s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.4;0;0.4" dur="3s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="${n.x}" cy="${n.y}" r="4" fill="var(--blue)" style="filter:drop-shadow(0 0 6px var(--blue))"/>
+      <text x="${n.x}" y="${n.y+38}" text-anchor="middle" fill="#9fc3d6" font-size="11" font-family="Rajdhani" letter-spacing="0.5">${n.label}</text>
+    </g>`;
+});
+twinSvg.innerHTML = svgMarkup;
+
+/* ================= TRUCK MAP SVG ================= */
+const truckSvg = document.getElementById('truckSvg');
+const routePath = "M20,180 C160,40 260,190 380,70 C480,-10 560,120 680,40";
+let tMarkup = `<path d="${routePath}" fill="none" stroke="var(--blue)" stroke-width="1" opacity="0.25" stroke-dasharray="4 5"/>`;
+for(let i=0;i<5;i++){
+  const dur = 6+i*1.3;
+  const col = i===2 ? 'var(--red)' : 'var(--blue)';
+  tMarkup += `<circle r="3.4" fill="${col}" style="filter:drop-shadow(0 0 5px ${col})">
+    <animateMotion dur="${dur}s" repeatCount="indefinite" path="${routePath}" begin="${i*0.9}s"/>
+  </circle>`;
+}
+[[20,180],[680,40]].forEach(([x,y],i)=>{
+  tMarkup += `<circle cx="${x}" cy="${y}" r="5" fill="none" stroke="var(--green)" stroke-width="1.5"/>
+  <circle cx="${x}" cy="${y}" r="2" fill="var(--green)"/>`;
+});
+truckSvg.innerHTML = tMarkup;
+
+/* ================= PREDICTIVE CHART ================= */
+const predictSvg = document.getElementById('predictSvg');
+const real = [40,55,48,70,62,80,74];
+const proj = [74,90,86,100,112,104,120];
+function toPoints(arr, offsetY=0){
+  const stepX = 320/(arr.length-1);
+  return arr.map((v,i)=>`${i*stepX},${150-v*0.9-offsetY}`).join(' ');
+}
+const realPts = toPoints(real);
+const projPts = toPoints(proj);
+predictSvg.innerHTML = `
+  <defs>
+    <linearGradient id="fillBlue" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="var(--blue)" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="var(--blue)" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  ${[0,1,2,3].map(i=>`<line x1="0" y1="${i*40}" x2="320" y2="${i*40}" stroke="rgba(255,255,255,0.05)"/>`).join('')}
+  <polygon points="0,150 ${realPts} 320,150" fill="url(#fillBlue)"/>
+  <polyline points="${realPts}" fill="none" stroke="var(--blue)" stroke-width="2" style="filter:drop-shadow(0 0 4px var(--blue))"/>
+  <polyline points="${projPts}" fill="none" stroke="var(--red)" stroke-width="1.6" stroke-dasharray="5 4" opacity="0.85"/>
+`;
+
+/* ================= FLOW STRIP ================= */
+const flowSvg = document.getElementById('flowSvg');
+const flowPath = "M20,35 L1180,35";
+let fMarkup = `<line x1="20" y1="35" x2="1180" y2="35" stroke="rgba(34,227,255,0.18)" stroke-width="1"/>`;
+for(let i=0;i<7;i++){
+  fMarkup += `<circle r="3.5" fill="var(--blue)" style="filter:drop-shadow(0 0 5px var(--blue))">
+    <animateMotion dur="4.5s" repeatCount="indefinite" path="${flowPath}" begin="${i*0.65}s"/>
+  </circle>`;
+}
+[20,218,416,614,812,1010,1180].forEach((x,i)=>{
+  fMarkup += `<circle cx="${x}" cy="35" r="5" fill="#0a1120" stroke="var(--blue)" stroke-width="1.3"/>`;
+});
+flowSvg.innerHTML = fMarkup;
+
+/* ================= LIVE NUMBER JITTER ================= */
+function jitter(el, base, spread, fmt){
+  setInterval(()=>{
+    const v = base + Math.round((Math.random()-0.5)*spread);
+    el.textContent = fmt ? fmt(v) : v;
+  }, 2600);
+}
+jitter(document.getElementById('kv1'), 4812, 40, v=>v.toLocaleString('pt-BR'));
+jitter(document.getElementById('kv5'), 27, 4);
+jitter(document.getElementById('hudTp'), 1240, 60, v=>v.toLocaleString('pt-BR'));
+
+/* ================= KPI TILT AU MOUSEMOVE ================= */
+document.querySelectorAll('.kpi').forEach(card=>{
+  card.addEventListener('mousemove', e=>{
+    const r = card.getBoundingClientRect();
+    const px = (e.clientX - r.left)/r.width - 0.5;
+    const py = (e.clientY - r.top)/r.height - 0.5;
+    card.style.transform = `rotateX(${py*-8}deg) rotateY(${px*8}deg) translateZ(6px)`;
+  });
+  card.addEventListener('mouseleave', ()=>{ card.style.transform=''; });
+});
+</script>
+</body>
+</html>

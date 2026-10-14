@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Portfólio · Dashboards e análises de logística</title>
+<meta name="description" content="Dashboards, mapas e análises de armazém/CD e supply chain. Projeto de portfólio com dados fictícios.">
+<style>
+:root{--bg:#f5f2f0;--surface:#fff;--ink:#221a16;--soft:#6b5f58;--line:#e0dcd9;--red:#e60000;--bordo:#7a1414}
+@media (prefers-color-scheme:dark){:root{--bg:#14100e;--surface:#1d1816;--ink:#f1ebe7;--soft:#a89b93;--line:#322a26;--red:#ff4a3d;--bordo:#ffb3ab}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,"Segoe UI",sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:40px 16px 64px}
+.eyebrow{font:700 11px/1 ui-monospace,Consolas,monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--red)}
+h1{font-size:clamp(28px,5vw,44px);margin:8px 0 10px;line-height:1.05}
+.lead{color:var(--soft);max-width:68ch;line-height:1.55;margin:0 0 20px}
+.note{font-size:13px;color:var(--soft);border-left:3px solid var(--red);padding:6px 12px;margin:0 0 24px;max-width:78ch}
+.filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px}
+.filters button{font:600 12px system-ui;border:1px solid var(--line);background:var(--surface);color:var(--soft);border-radius:999px;padding:7px 14px;cursor:pointer}
+.filters button[aria-pressed=true]{background:var(--red);border-color:var(--red);color:#fff}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px}
+.card{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;text-decoration:none;color:inherit;transition:transform .15s,box-shadow .15s}
+.card:hover{transform:translateY(-3px);box-shadow:0 12px 28px -14px rgba(34,26,22,.35)}
+.card[hidden]{display:none}
+.thumb{aspect-ratio:16/10;background:var(--line);overflow:hidden}.thumb img{width:100%;height:100%;object-fit:cover;object-position:top;display:block}
+.ph{height:100%;display:grid;place-items:center;color:var(--soft);font-size:13px}
+.body{padding:16px 18px 18px;display:flex;flex-direction:column;gap:8px}
+.cat{font:700 10px/1 ui-monospace,Consolas,monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--red)}
+h2{font-size:18px;margin:0;line-height:1.2}p{margin:0;font-size:14px;line-height:1.5;color:var(--soft)}
+.tools{font:500 11.5px ui-monospace,Consolas,monospace;color:var(--bordo)}
+footer{margin-top:36px;font-size:12.5px;color:var(--soft)}
+</style></head><body><div class="wrap">
+<div class="eyebrow">Portfólio · logística e supply chain</div>
+<h1>Dashboards, mapas e análises de armazém/CD</h1>
+<p class="lead">Coleção de projetos de BI e análise operacional: recebimento, armazenagem, expedição, inventário, classificação de estoque e capacidade de layout. Cada card abre o projeto, que roda direto no navegador, sem servidor.</p>
+<p class="note">Todos os nomes de pessoas, clientes, fornecedores, produtos e marcas foram substituídos por nomes fictícios (empresa inventada "Aurora Suplementos").</p>
+<div class="filters" id="f"><button aria-pressed="true" data-c="">Todos</button><button aria-pressed="false" data-c="Conceito visual">Conceito visual</button><button aria-pressed="false" data-c="Documentação">Documentação</button><button aria-pressed="false" data-c="Gestão">Gestão</button><button aria-pressed="false" data-c="Gêmeo digital">Gêmeo digital</button><button aria-pressed="false" data-c="Layout e capacidade">Layout e capacidade</button><button aria-pressed="false" data-c="Motion graphic">Motion graphic</button><button aria-pressed="false" data-c="Operação">Operação</button><button aria-pressed="false" data-c="Produtividade">Produtividade</button><button aria-pressed="false" data-c="Qualidade">Qualidade</button><button aria-pressed="false" data-c="Supply chain">Supply chain</button></div>
+<div class="grid" id="g">
+<a class="card" href="projetos/controle-geral/" data-cat="Operação">
+  <div class="thumb"><img src="img/projetos/controle-geral.jpg" alt="Prévia: Controle Geral" loading="lazy"></div>
+  <div class="body"><span class="cat">Operação</span><h2>Controle Geral</h2><p>Dashboard principal do CD: recebimento, armazenagem, expedição, devoluções, avarias, conferentes e movimentação, com filtros por período, turno e transportadora e três temas visuais.</p><span class="tools">HTML · JavaScript · cubo de dados dia × dimensão</span></div></a>
+<a class="card" href="projetos/orbital-twin/" data-cat="Gêmeo digital">
+  <div class="thumb"><img src="img/projetos/orbital-twin.jpg" alt="Prévia: Orbital Twin" loading="lazy"></div>
+  <div class="body"><span class="cat">Gêmeo digital</span><h2>Orbital Twin</h2><p>Gêmeo digital 3D do galpão com ocupação por nível, fluxo de carretas, replay diário e um painel de alertas automáticos (&quot;IA operacional&quot;) por regras auditáveis.</p><span class="tools">HTML · SVG/Canvas · JavaScript</span></div></a>
+<a class="card" href="projetos/ritmo-operacional/" data-cat="Produtividade">
+  <div class="thumb"><img src="img/projetos/ritmo-operacional.jpg" alt="Prévia: Ritmo Operacional" loading="lazy"></div>
+  <div class="body"><span class="cat">Produtividade</span><h2>Ritmo Operacional</h2><p>Evolução diária por conferente e atividade: expedição por canal, pedidos colocados e produtividade da equipe.</p><span class="tools">HTML · JavaScript</span></div></a>
+<a class="card" href="projetos/mapa-do-galpao/" data-cat="Layout e capacidade">
+  <div class="thumb"><img src="img/projetos/mapa-do-galpao.jpg" alt="Prévia: Mapa do Galpão" loading="lazy"></div>
+  <div class="body"><span class="cat">Layout e capacidade</span><h2>Mapa do Galpão</h2><p>Planta baixa interativa com Lado A, E-COM e Lado B, simulador de ocupação e capacidade antes e depois do projeto de extensão.</p><span class="tools">HTML · SVG · JavaScript</span></div></a>
+<a class="card" href="projetos/projeto-extensao-galpao/" data-cat="Layout e capacidade">
+  <div class="thumb"><img src="img/projetos/projeto-extensao-galpao.jpg" alt="Prévia: Projeto de Extensão do Galpão (A + B)" loading="lazy"></div>
+  <div class="body"><span class="cat">Layout e capacidade</span><h2>Projeto de Extensão do Galpão (A + B)</h2><p>Maquete isométrica da extensão dos Lados A e B: capacidade bruta, vagas inoperantes (colunas e túnel) e operantes por rua.</p><span class="tools">HTML · SVG · JavaScript</span></div></a>
+<a class="card" href="projetos/extensao-galpao-o-y/" data-cat="Layout e capacidade">
+  <div class="thumb"><img src="img/projetos/extensao-galpao-o-y.jpg" alt="Prévia: Extensão do Galpão O–Y" loading="lazy"></div>
+  <div class="body"><span class="cat">Layout e capacidade</span><h2>Extensão do Galpão O–Y</h2><p>Versão inicial da maquete: 19 corredores atuais e 17 ruas de extensão, com regra de perda por coluna e túnel.</p><span class="tools">HTML · SVG · JavaScript</span></div></a>
+<a class="card" href="projetos/inventario-acuracidade/" data-cat="Qualidade">
+  <div class="thumb"><img src="img/projetos/inventario-acuracidade.jpg" alt="Prévia: Acuracidade do Inventário" loading="lazy"></div>
+  <div class="body"><span class="cat">Qualidade</span><h2>Acuracidade do Inventário</h2><p>Acuracidade do inventário por rua (corretos ÷ (sistema + entrada)), com semáforo de meta, rosca geral e tabela de divergências.</p><span class="tools">HTML · JavaScript</span></div></a>
+<a class="card" href="projetos/inventario-consolidado/" data-cat="Qualidade">
+  <div class="thumb"><img src="img/projetos/inventario-consolidado.jpg" alt="Prévia: Consolidado do Inventário (1ª e 2ª contagem)" loading="lazy"></div>
+  <div class="body"><span class="cat">Qualidade</span><h2>Consolidado do Inventário (1ª e 2ª contagem)</h2><p>Consolidado de contagem cega: posições a dar entrada e a limpar, por rua e conferente, com detecção de conflitos e reconferência.</p><span class="tools">HTML · JavaScript</span></div></a>
+<a class="card" href="projetos/torre-classificacao-estoque/" data-cat="Supply chain">
+  <div class="thumb"><img src="img/projetos/torre-classificacao-estoque.jpg" alt="Prévia: Torre de Classificação de Estoque" loading="lazy"></div>
+  <div class="body"><span class="cat">Supply chain</span><h2>Torre de Classificação de Estoque</h2><p>Classificação ABC / XYZ / FSN / VED dos SKUs: volume, variabilidade, giro e criticidade, com filtros e combinações de classe.</p><span class="tools">HTML · JavaScript</span></div></a>
+<a class="card" href="projetos/painel-gerencial-julho/" data-cat="Gestão">
+  <div class="thumb"><div class="ph">prévia no projeto</div></div>
+  <div class="body"><span class="cat">Gestão</span><h2>Painel Gerencial · Julho</h2><p>Painel mensal com visão geral, movimentação, operadores, devoluções (motivos, ofensor, plano de ação) e recebimento entre unidades.</p><span class="tools">HTML · Chart.js</span></div></a>
+<a class="card" href="projetos/painel-gerencial-junho/" data-cat="Gestão">
+  <div class="thumb"><div class="ph">prévia no projeto</div></div>
+  <div class="body"><span class="cat">Gestão</span><h2>Painel Gerencial · Junho</h2><p>Mesmo painel no mês anterior, para comparação (variação líquida de estoque, devoluções e produtividade).</p><span class="tools">HTML · Chart.js</span></div></a>
+<a class="card" href="projetos/falcon-guia-expedicao/" data-cat="Documentação">
+  <div class="thumb"><img src="img/projetos/falcon-guia-expedicao.jpg" alt="Prévia: Falcon · Guia de Expedição" loading="lazy"></div>
+  <div class="body"><span class="cat">Documentação</span><h2>Falcon · Guia de Expedição</h2><p>Guia de operação da expedição em formato de manual técnico: do pedido à entrega, com gráficos, SKUs, atrasos e plano de ação.</p><span class="tools">HTML · CSS · JavaScript</span></div></a>
+<a class="card" href="projetos/falcon-motiong/" data-cat="Motion graphic">
+  <div class="thumb"><img src="img/projetos/falcon-motiong.jpg" alt="Prévia: Falcon / MotionG" loading="lazy"></div>
+  <div class="body"><span class="cat">Motion graphic</span><h2>Falcon / MotionG</h2><p>O resultado do mês contado como uma missão espacial, em 7 capítulos animados (Ignição, Trajetória, Pulso, Canais, Tripulação, Alcance, Retorno).</p><span class="tools">HTML · CSS · JavaScript · SVG · Web Animations API</span></div></a>
+<a class="card" href="projetos/falcon-resumo-mensal/" data-cat="Gestão">
+  <div class="thumb"><img src="img/projetos/falcon-resumo-mensal.jpg" alt="Prévia: Falcon · Resumo Mensal" loading="lazy"></div>
+  <div class="body"><span class="cat">Gestão</span><h2>Falcon · Resumo Mensal</h2><p>Resumo mensal exportável que alimenta o MotionG: indicadores do mês, canais, transportadoras, UFs e devoluções.</p><span class="tools">HTML · JavaScript</span></div></a>
+<a class="card" href="projetos/orion-centro-de-comando/" data-cat="Conceito visual">
+  <div class="thumb"><img src="img/projetos/orion-centro-de-comando.jpg" alt="Prévia: ORION · Centro de Comando Logístico" loading="lazy"></div>
+  <div class="body"><span class="cat">Conceito visual</span><h2>ORION · Centro de Comando Logístico</h2><p>Protótipo de centro de comando com estética HUD: KPIs, docas, frota, gêmeo digital do fluxo e insights preditivos (dados simulados).</p><span class="tools">HTML · CSS · SVG · Canvas</span></div></a>
+</div>
+<footer>Repositório principal: sistema completo de BI (Node, MySQL, React) na raiz deste repositório.</footer>
+</div>
+<script>
+const b=[...document.querySelectorAll('#f button')],c=[...document.querySelectorAll('.card')];
+b.forEach(x=>x.onclick=()=>{b.forEach(y=>y.setAttribute('aria-pressed',y===x));c.forEach(k=>k.hidden=x.dataset.c&&k.dataset.cat!==x.dataset.c)});
+</script></body></html>

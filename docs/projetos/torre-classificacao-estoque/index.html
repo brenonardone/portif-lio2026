@@ -1,0 +1,633 @@
+<title>Torre de Classificação de Estoque</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+:root{
+  --bg:#f5f1ea;
+  --surface:#ffffff;
+  --surface-2:#faf7f1;
+  --border:#e6ddcf;
+  --ink:#211c17;
+  --ink-2:#5c5349;
+  --muted:#938a7d;
+  --brand:#8a1620;
+  --brand-strong:#5c0f16;
+  --brand-soft:#f4dfdf;
+  --track:#ece2d2;
+  --good:#2f7d4f;
+  --good-bg:#e3f3e9;
+  --warn:#a8710f;
+  --warn-bg:#f7ecd8;
+  --crit:#c0392b;
+  --crit-bg:#fbe4e0;
+  --a-color:#5c0f16;
+  --b-color:#b1494f;
+  --c-color:#e3b9ac;
+  --focus:#2563eb;
+  --shadow:0 1px 2px rgba(33,28,23,.06),0 8px 24px -12px rgba(33,28,23,.12);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#17130f; --surface:#221c16; --surface-2:#2a231b; --border:#3c3125;
+    --ink:#f3ece1; --ink-2:#cabfae; --muted:#948a79;
+    --brand:#e2555f; --brand-strong:#c23a44; --brand-soft:#3a1c1e;
+    --track:#3c3125;
+    --good:#5fd08c; --good-bg:#173425;
+    --warn:#e0ac4a; --warn-bg:#3a2c11;
+    --crit:#ef7a68; --crit-bg:#3d1c17;
+    --a-color:#e2555f; --b-color:#c9807f; --c-color:#7d5a52;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px -12px rgba(0,0,0,.5);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#17130f; --surface:#221c16; --surface-2:#2a231b; --border:#3c3125;
+  --ink:#f3ece1; --ink-2:#cabfae; --muted:#948a79;
+  --brand:#e2555f; --brand-strong:#c23a44; --brand-soft:#3a1c1e;
+  --track:#3c3125;
+  --good:#5fd08c; --good-bg:#173425;
+  --warn:#e0ac4a; --warn-bg:#3a2c11;
+  --crit:#ef7a68; --crit-bg:#3d1c17;
+  --a-color:#e2555f; --b-color:#c9807f; --c-color:#7d5a52;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px -12px rgba(0,0,0,.5);
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Inter",system-ui,sans-serif;-webkit-font-smoothing:antialiased;}
+.wrap{max-width:1280px;margin:0 auto;padding:28px 24px 64px;}
+
+.masthead{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;}
+.masthead .kicker{font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:30px;color:var(--ink);}
+.masthead .title{font-family:"Barlow Condensed",sans-serif;font-weight:800;font-size:30px;letter-spacing:.4px;color:var(--brand);text-transform:uppercase;}
+.meta{margin-top:6px;color:var(--ink-2);font-size:14px;}
+.meta b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums;}
+.meta .dot{margin:0 8px;color:var(--muted);}
+
+/* filter bar */
+.filters{margin-top:20px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:16px 20px;}
+.filters-grid{display:grid;grid-template-columns:2fr repeat(3,minmax(140px,1fr)) auto;gap:16px;align-items:end;}
+.field label{display:block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+.field input, .field select{width:100%;font-family:inherit;font-size:14px;color:var(--ink);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:9px 10px;}
+.field input:focus, .field select:focus, button:focus-visible, .tab:focus-visible{outline:2px solid var(--focus);outline-offset:2px;}
+.btn-clear{background:var(--brand-strong);color:#fff;border:none;border-radius:8px;padding:10px 18px;font-weight:700;font-size:13px;letter-spacing:.03em;text-transform:uppercase;cursor:pointer;white-space:nowrap;}
+.btn-clear:hover{filter:brightness(1.08);}
+.filter-status{margin-top:10px;font-size:13px;color:var(--muted);}
+
+/* tabs */
+.tabs{margin-top:22px;display:flex;gap:4px;border-bottom:1px solid var(--border);overflow-x:auto;}
+.tab{appearance:none;background:none;border:none;border-bottom:3px solid transparent;padding:12px 16px 10px;font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:16px;letter-spacing:.03em;text-transform:uppercase;color:var(--muted);cursor:pointer;white-space:nowrap;}
+.tab:hover{color:var(--ink-2);}
+.tab[aria-selected="true"]{color:var(--brand);border-bottom-color:var(--brand);}
+
+.section-bar{margin-top:24px;background:var(--brand-strong);color:#fff;border-radius:10px 10px 0 0;padding:13px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.section-bar h2{margin:0;font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:17px;letter-spacing:.03em;text-transform:uppercase;}
+.pill{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;background:var(--good-bg);color:var(--good);border-radius:999px;padding:5px 11px;white-space:nowrap;}
+.panel-body{background:var(--surface);border:1px solid var(--border);border-top:none;border-radius:0 0 10px 10px;padding:22px;}
+.panel-note{margin:0 0 18px;font-size:13px;color:var(--muted);}
+
+/* stat cards */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:22px;}
+.stat-card{background:var(--surface-2);border:1px solid var(--border);border-left:4px solid var(--brand);border-radius:8px;padding:14px 16px;}
+.stat-card .label{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);}
+.stat-card .value{margin-top:6px;font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:26px;font-variant-numeric:tabular-nums;color:var(--ink);}
+.stat-card .sub{margin-top:3px;font-size:12px;color:var(--ink-2);}
+
+/* class ABC/XYZ/FSN summary cards */
+.class-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:22px;}
+@media (max-width:760px){.class-row{grid-template-columns:1fr;}}
+.class-card{border:1px solid var(--border);border-radius:10px;padding:16px 18px;background:var(--surface-2);}
+.class-card .chead{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.class-card .cname{font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:20px;}
+.class-card .cbadge{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:#fff;font-family:"Barlow Condensed",sans-serif;font-weight:800;font-size:15px;}
+.class-card .crow{display:flex;justify-content:space-between;font-size:13px;color:var(--ink-2);padding:4px 0;border-top:1px dashed var(--border);}
+.class-card .crow:first-of-type{border-top:none;}
+.class-card .crow b{color:var(--ink);font-family:"IBM Plex Mono",monospace;font-weight:600;font-variant-numeric:tabular-nums;}
+.class-card .bar-track{margin-top:10px;height:8px;border-radius:4px;background:var(--track);overflow:hidden;}
+.class-card .bar-fill{height:100%;border-radius:4px;}
+
+/* two-panel chart grid */
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:22px;}
+@media (max-width:860px){.charts{grid-template-columns:1fr;}.filters-grid{grid-template-columns:1fr 1fr;}}
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px;}
+.chart-card h3{margin:0 0 4px;font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:17px;}
+.chart-card .chart-sub{margin:0 0 14px;font-size:12px;color:var(--muted);}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:12px;color:var(--ink-2);}
+.legend span{display:inline-flex;align-items:center;gap:6px;}
+.legend i{width:10px;height:10px;border-radius:3px;display:inline-block;}
+
+/* horizontal bar rows (donut alt = stacked bars) */
+.hbar-row{display:grid;grid-template-columns:64px 1fr 78px;align-items:center;gap:10px;margin-bottom:12px;}
+.hbar-row:last-child{margin-bottom:0;}
+.hbar-label{font-size:13px;color:var(--ink-2);font-weight:600;}
+.hbar-track{background:var(--track);border-radius:5px;height:16px;overflow:hidden;}
+.hbar-fill{height:100%;border-radius:5px;}
+.hbar-value{font-family:"IBM Plex Mono",monospace;font-size:12.5px;font-weight:600;text-align:right;font-variant-numeric:tabular-nums;color:var(--ink-2);}
+
+/* pareto svg */
+.pareto-wrap{position:relative;}
+svg.pareto{width:100%;height:260px;display:block;overflow:visible;}
+.grid-line{stroke:var(--border);stroke-width:1;}
+.pareto-bar{fill:var(--brand);}
+.pareto-line{fill:none;stroke:var(--ink-2);stroke-width:2;stroke-linejoin:round;stroke-linecap:round;}
+.pareto-dot{fill:var(--surface);stroke:var(--ink-2);stroke-width:2;}
+.axis-label{font-size:9.5px;fill:var(--muted);font-family:"Inter",sans-serif;}
+.tooltip{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);font-size:12px;padding:6px 9px;border-radius:6px;transform:translate(-50%,-118%);white-space:nowrap;opacity:0;transition:opacity .1s;z-index:5;max-width:260px;white-space:normal;}
+
+/* tables */
+.table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:10px;}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:640px;}
+thead th{position:sticky;top:0;background:var(--surface-2);text-align:left;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);padding:10px 12px;border-bottom:1px solid var(--border);}
+tbody td{padding:9px 12px;border-bottom:1px solid var(--border);color:var(--ink-2);}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover{background:var(--surface-2);}
+td.num, th.num{text-align:right;font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;}
+td.prod{color:var(--ink);font-weight:500;max-width:340px;}
+.tag{display:inline-flex;align-items:center;justify-content:center;min-width:22px;padding:2px 6px;border-radius:5px;font-size:11px;font-weight:700;font-family:"IBM Plex Mono",monospace;color:#fff;}
+
+.search-row{display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap;align-items:center;}
+.search-row input{flex:1;min-width:220px;font-family:inherit;font-size:14px;padding:9px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface-2);color:var(--ink);}
+.search-row select{font-family:inherit;font-size:13px;padding:9px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface-2);color:var(--ink);}
+.result-count{font-size:12.5px;color:var(--muted);white-space:nowrap;}
+
+.combo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:4px;}
+.combo-card{border:1px solid var(--border);border-radius:8px;padding:10px 12px;background:var(--surface-2);}
+.combo-card .ccode{font-family:"IBM Plex Mono",monospace;font-size:12.5px;font-weight:600;color:var(--ink);}
+.combo-card .ccount{margin-top:4px;font-family:"Barlow Condensed",sans-serif;font-weight:800;font-size:22px;color:var(--brand);}
+.combo-card .cpct{font-size:11px;color:var(--muted);}
+
+.section{display:none;}
+.section.active{display:block;}
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <span class="kicker">Torre |</span>
+    <span class="title">Classificação de Estoque — ABC · VED · XYZ · FSN</span>
+  </header>
+  <p class="meta">
+    Período de análise: <b>06/2026</b> a <b>08/2026</b>
+    <span class="dot">·</span>
+    Base: <b>301</b> SKUs
+    <span class="dot">·</span>
+    Origem: <b>Movimentação_de_estoque.xlsx</b>
+  </p>
+
+  <div class="filters">
+    <div class="filters-grid">
+      <div class="field">
+        <label for="f-busca">Buscar SKU</label>
+        <input id="f-busca" type="text" placeholder="Código ou descrição do produto">
+      </div>
+      <div class="field">
+        <label for="f-abc">Classe ABC</label>
+        <select id="f-abc"><option value="">Todas</option><option>A</option><option>B</option><option>C</option></select>
+      </div>
+      <div class="field">
+        <label for="f-xyz">Classe XYZ</label>
+        <select id="f-xyz"><option value="">Todas</option><option>X</option><option>Y</option><option>Z</option></select>
+      </div>
+      <div class="field">
+        <label for="f-fsn">Classe FSN</label>
+        <select id="f-fsn"><option value="">Todas</option><option>F</option><option>S</option><option>N</option></select>
+      </div>
+      <button class="btn-clear" type="button" id="btn-clear">Limpar filtros</button>
+    </div>
+    <p class="filter-status" id="filter-status">Sem filtro (301 SKUs)</p>
+  </div>
+
+  <nav class="tabs" role="tablist" aria-label="Curvas de classificação">
+    <button class="tab" role="tab" data-tab="visao" aria-selected="true">Visão Geral</button>
+    <button class="tab" role="tab" data-tab="abc" aria-selected="false">Curva ABC</button>
+    <button class="tab" role="tab" data-tab="xyz" aria-selected="false">Curva XYZ</button>
+    <button class="tab" role="tab" data-tab="fsn" aria-selected="false">Curva FSN</button>
+    <button class="tab" role="tab" data-tab="ved" aria-selected="false">Curva VED</button>
+    <button class="tab" role="tab" data-tab="final" aria-selected="false">Classificação Final</button>
+  </nav>
+
+  <!-- VISAO GERAL -->
+  <section class="section active" id="panel-visao">
+    <div class="section-bar"><h2>Painel Geral</h2><span class="pill" id="visao-pill">301 SKUs analisados</span></div>
+    <div class="panel-body">
+
+      <div class="stats" id="top-kpis">
+        <div class="stat-card"><div class="label">SKUs Classe A</div><div class="value">80</div><div class="sub">80% do volume expedido</div></div>
+        <div class="stat-card"><div class="label">SKUs Classe B</div><div class="value">94</div><div class="sub">15% do volume expedido</div></div>
+        <div class="stat-card"><div class="label">Demanda Estável (X)</div><div class="value">244</div><div class="sub">CV ≤ 0.5</div></div>
+        <div class="stat-card"><div class="label">Demanda Irregular (Z)</div><div class="value">5</div><div class="sub">CV &gt; 1.0</div></div>
+        <div class="stat-card"><div class="label">Giro Alto (F)</div><div class="value">101</div><div class="sub">Alta freq. de saída</div></div>
+      </div>
+
+      <div class="class-row" id="class-cards"></div>
+
+      <div class="charts">
+        <div class="chart-card">
+          <h3>Distribuição XYZ</h3>
+          <p class="chart-sub">Regularidade da demanda — 301 SKUs</p>
+          <div id="xyz-dist"></div>
+        </div>
+        <div class="chart-card">
+          <h3>Distribuição FSN</h3>
+          <p class="chart-sub">Frequência de saídas — 301 SKUs</p>
+          <div id="fsn-dist"></div>
+        </div>
+      </div>
+
+      <h3 style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:17px;margin:4px 0 12px;">Top 10 SKUs por volume de saída</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Código</th><th>Produto</th><th class="num">Vol. Saídas</th><th class="num">Giro</th><th>ABC</th><th>XYZ</th><th>FSN</th><th>Classe Final</th></tr></thead>
+          <tbody id="top10-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- CURVA ABC -->
+  <section class="section" id="panel-abc">
+    <div class="section-bar"><h2>Curva ABC — Volume de Saídas</h2><span class="pill" id="abc-pill">Responde ao filtro</span></div>
+    <div class="panel-body">
+      <p class="panel-note">Classificação por volume expedido (regra Pareto). Classe A concentra 80,0% do volume com apenas 80 SKUs.</p>
+      <div class="chart-card" style="margin-bottom:20px;">
+        <h3>Pareto — Top 20 SKUs</h3>
+        <p class="chart-sub">Barras = volume de saídas · linha = % acumulado</p>
+        <div class="pareto-wrap">
+          <svg class="pareto" id="pareto-chart" viewBox="0 0 900 260" preserveAspectRatio="none"></svg>
+          <div class="tooltip" id="pareto-tooltip"></div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Produto</th><th class="num">Vol. Saídas</th><th class="num">% Acumulado</th><th>Classe</th></tr></thead>
+          <tbody id="abc-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- CURVA XYZ -->
+  <section class="section" id="panel-xyz">
+    <div class="section-bar"><h2>Curva XYZ — Variabilidade da Demanda</h2><span class="pill" id="xyz-pill">Responde ao filtro</span></div>
+    <div class="panel-body">
+      <p class="panel-note">X = demanda estável (CV ≤ 0.5) · Y = intermediária · Z = irregular (CV &gt; 1.0). Quanto maior o CV, mais imprevisível é o consumo.</p>
+      <div class="class-row" id="xyz-cards" style="margin-bottom:20px;"></div>
+      <div class="charts">
+        <div class="chart-card">
+          <h3>SKUs com demanda mais estável (X)</h3>
+          <p class="chart-sub">CV = 0 — consumo perfeitamente constante</p>
+          <div class="table-wrap"><table><thead><tr><th>Produto</th><th class="num">Média/Saída</th><th>Classe</th></tr></thead><tbody id="xyz-x-body"></tbody></table></div>
+        </div>
+        <div class="chart-card">
+          <h3>SKUs com demanda mais irregular (Z)</h3>
+          <p class="chart-sub">Maiores coeficientes de variação</p>
+          <div class="table-wrap"><table><thead><tr><th>Produto</th><th class="num">CV</th><th>Classe</th></tr></thead><tbody id="xyz-z-body"></tbody></table></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CURVA FSN -->
+  <section class="section" id="panel-fsn">
+    <div class="section-bar"><h2>Curva FSN — Frequência de Saídas</h2><span class="pill" id="fsn-pill">Responde ao filtro</span></div>
+    <div class="panel-body">
+      <p class="panel-note">F = Fast (giro alto) · S = Slow (giro lento) · N = Non-moving (sem saída no período). SKUs "N" são candidatos a revisão de estoque parado.</p>
+      <div class="charts" style="margin-bottom:20px;">
+        <div class="chart-card">
+          <h3>Distribuição FSN</h3>
+          <div id="fsn-dist-2"></div>
+        </div>
+        <div class="chart-card">
+          <h3>Top 15 — maior nº de saídas (F)</h3>
+          <div class="table-wrap"><table><thead><tr><th>Produto</th><th class="num">Nº Saídas</th><th>Classe</th></tr></thead><tbody id="fsn-body"></tbody></table></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CURVA VED -->
+  <section class="section" id="panel-ved">
+    <div class="section-bar"><h2>Curva VED — Criticidade / Essencialidade</h2><span class="pill">Proxy da Curva ABC</span></div>
+    <div class="panel-body">
+      <p class="panel-note">V = Vital · E = Essencial · D = Desejável. Neste arquivo a classificação VED é derivada diretamente da Curva ABC (V↔A, E↔B, D↔C), então as contagens são idênticas.</p>
+      <div class="class-row" id="ved-cards" style="margin-bottom:20px;"></div>
+      <div class="chart-card">
+        <h3>Top 15 SKUs Vitais (V) por volume de saída</h3>
+        <div class="table-wrap"><table><thead><tr><th>Produto</th><th class="num">Vol. Saídas</th><th class="num">Giro</th><th>Classe VED</th></tr></thead><tbody id="ved-body"></tbody></table></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CLASSIFICACAO FINAL -->
+  <section class="section" id="panel-final">
+    <div class="section-bar"><h2>Classificação Final — ABC · VED · XYZ · FSN</h2><span class="pill" id="final-count-pill">301 SKUs</span></div>
+    <div class="panel-body">
+      <p class="panel-note">Combinação das quatro curvas por SKU. Use a busca e os filtros acima para localizar produtos específicos.</p>
+
+      <h3 style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;margin:0 0 10px;">Combinações mais frequentes</h3>
+      <div class="combo-grid" id="combo-grid" style="margin-bottom:24px;"></div>
+
+      <div class="search-row">
+        <span class="result-count" id="final-result-count"></span>
+      </div>
+      <div class="table-wrap" style="max-height:560px;overflow-y:auto;">
+        <table>
+          <thead><tr><th>Produto</th><th class="num">Vol. Saídas</th><th class="num">Giro</th><th class="num">CV</th><th>ABC</th><th>XYZ</th><th>FSN</th><th>VED</th><th>Classe Final</th></tr></thead>
+          <tbody id="final-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+const DATA = {"final":[["10042 - AU CREATINA 300G",2015592,921,1538230,1603,1.31,2188.48,1702.24,0.7778,22.87,"A","Y","F","V","A-V-Y-F"],["10553 - AU CRUNCH BAR CACAU CROCANTE 12 UNDS 540G",752793,1018,798880,1680,0.94,739.48,707.03,0.9561,31.41,"A","Y","F","V","A-V-Y-F"],["10063 - AU CREATINA 120 CPS",200303,110,173754,135,1.15,1820.94,888.79,0.4881,33.69,"A","X","F","V","A-V-X-F"],["AU2885 - AU COQUETELEIRA NACIONAL 1 DOSE 600 ML",185880,124,162730,249,1.14,1499.03,456.18,0.3043,35.79,"A","X","F","V","A-V-X-F"],["10105 - AU CREATINA 150G",161676,71,270062,129,0.6,2277.13,597.69,0.2625,37.63,"A","X","F","V","A-V-X-F"],["10182 - AU VITAMINA B12 60 CAPSULAS",116597,45,63461,32,1.84,2591.04,1287.34,0.4968,38.95,"A","X","F","V","A-V-X-F"],["10588 - AU WHEY PREMIUM GELATO DI LATTE  900G",113475,174,52718,191,2.15,652.16,1147.95,1.7602,40.24,"A","Z","F","V","A-V-Z-F"],["10189 - AU CRUNCH BAR LEITE EM PÓ COM CREME DE AVELA 12 UND",105645,193,170640,359,0.62,547.38,240.82,0.4399,41.44,"A","X","F","V","A-V-X-F"],["10308 - AU MAGNESIO BISGLICINATO 60 CAPSULAS",102060,44,97299,51,1.05,2319.55,1021.53,0.4404,42.6,"A","X","F","V","A-V-X-F"],["10504 - AU CARNIFORCE SABOR CHOCOLATE 900G",98461,374,92822,445,1.06,263.26,122.73,0.4662,43.71,"A","X","F","V","A-V-X-F"],["10616 - AU CREATINA ULTRA SABOR MORANGO 350G",93030,90,92968,102,1.0,1033.67,360.09,0.3484,44.77,"A","X","F","V","A-V-X-F"],["10091 - AU CRUNCH BAR TRUFA AVELA 12 UNID V2",87253,159,69717,147,1.25,548.76,185.61,0.3382,45.76,"A","X","F","V","A-V-X-F"],["10322 - AU WHEY PREMIUM BAUNILHA 900G POTE",86099,330,75478,360,1.14,260.91,159.7,0.6121,46.74,"A","Y","F","V","A-V-Y-F"],["10406 - AU CRUNCH BAR DUO CRUNCH 12 UNID",84750,168,105993,224,0.8,504.46,128.27,0.2543,47.7,"A","X","F","V","A-V-X-F"],["10364 - AU WHEY PREMIUM COOKIES AND CREAM 900G POUCH",76927,206,63428,229,1.21,373.43,169.98,0.4552,48.57,"A","X","F","V","A-V-X-F"],["10399 - AU CRUNCH BAR COOKIES AND CREAM 12 UNID",76863,147,122791,259,0.63,522.88,163.62,0.3129,49.44,"A","X","F","V","A-V-X-F"],["10343 - AU WHEY PREMIUM BAUNILHA 900G POUCH",75188,253,93522,336,0.8,297.19,69.77,0.2348,50.3,"A","X","F","V","A-V-X-F"],["76961 - AU OMEGA 3 120 CAPS",75185,31,67633,43,1.11,2425.32,1224.54,0.5049,51.15,"A","Y","F","V","A-V-Y-F"],["10434 - AU 100% CREATINE 300G LATA",74055,50,56757,46,1.3,1481.1,727.12,0.4909,51.99,"A","X","F","V","A-V-X-F"],["AU2846 - COQUETELEIRA 1 DOSE 60ML TRANSP",74000,8,0,0,0,9250.0,17407.4,1.8819,52.83,"A","Z","S","V","A-V-Z-S"],["10056 - AU CREATINA  60 CPS",73499,31,71775,38,1.02,2370.94,1103.14,0.4653,53.66,"A","X","F","V","A-V-X-F"],["10609 - AU CREATINA ULTRA SABOR LIMAO 350G",70869,71,81199,91,0.87,998.15,309.35,0.3099,54.47,"A","X","F","V","A-V-X-F"],["10749 - AU CREATINA ULTRA 500G POTE",69800,70,48892,68,1.43,997.14,364.74,0.3658,55.26,"A","X","F","V","A-V-X-F"],["10350 - AU WHEY PREMIUM CHOCOLATE 900G POUCH",66457,200,73499,265,0.9,332.29,119.8,0.3605,56.01,"A","X","F","V","A-V-X-F"],["77432 - AMOSTRA AU COLÁGENO PRO CHOCOLATE BELGA 25G",64950,5,0,0,0,12990.0,4833.26,0.3721,56.75,"A","X","S","V","A-V-X-S"],["10525 - AU CRUNCH BAR BROWNIE DE CHOCOLATE 12 UN",59798,114,60483,128,0.99,524.54,196.7,0.375,57.43,"A","X","F","V","A-V-X-F"],["77966 - AU AMOSTRA CREATINE HMB FRUTAS AMARELAS 1 UN 10G",58300,2,57450,4,1.01,29150.0,6050.0,0.2075,58.09,"A","X","N","V","A-V-X-N"],["10329 - AU WHEY PREMIUM CHOCOLATE 900G POTE",55775,235,60034,273,0.93,237.34,87.49,0.3686,58.72,"A","X","F","V","A-V-X-F"],["10623 - AU MAG 5 COMPLEX 90 CAPSULAS",54544,32,57675,38,0.95,1704.5,773.73,0.4539,59.34,"A","X","F","V","A-V-X-F"],["10315 - AU ZINCO QUELATO BISGLICINATO 60 CAPSULAS",52698,22,170893,86,0.31,2395.36,1091.33,0.4556,59.94,"A","X","F","V","A-V-X-F"],["77254 - AMOSTRA AU VEGAN TASTY BROWNIE DE CHOCOLATE SACHE 35G",52500,3,30000,4,1.75,17500.0,3535.53,0.202,60.54,"A","X","N","V","A-V-X-N"],["77540 - AU AMOSTRA CREATINE TASTY MORANGO 3,5G",51900,2,39400,3,1.32,25950.0,1050.0,0.0405,61.12,"A","X","N","V","A-V-X-N"],["10511 - AU CARNIFORCE SABOR BAUNILHA 900G",49313,185,75707,361,0.65,266.56,196.47,0.7371,61.68,"A","Y","F","V","A-V-Y-F"],["10357 - AU WHEY PREMIUM MORANGO 900G POUCH",49236,156,60771,220,0.81,315.62,157.15,0.4979,62.24,"A","X","F","V","A-V-X-F"],["10483 - MASSMAX CHOCOLATE POUCH 3KG",49085,206,55655,396,0.88,238.28,191.22,0.8025,62.8,"A","Y","F","V","A-V-Y-F"],["77569 - AU CRUNCH BAR CREME DE COCO 12 UNIDADES 540G",43831,88,52927,111,0.83,498.08,106.31,0.2134,63.3,"A","X","F","V","A-V-X-F"],["10798 - AMOSTRA AU CLEANPRO WHEY ZERO LACTOSE GELATO DI LATTE 30G",43300,4,9650,2,4.49,10825.0,4572.95,0.4224,63.79,"A","X","S","V","A-V-X-S"],["10245 - AU VITAMINA D3 50 MCG 120 CAPSULAS",43192,18,36305,23,1.19,2399.56,915.78,0.3816,64.28,"A","X","F","V","A-V-X-F"],["10686 - AU AURA WHEY BAUNILHA 1,2KG POUCH",41803,130,54605,199,0.77,321.56,118.17,0.3675,64.75,"A","X","F","V","A-V-X-F"],["76722 - AU NRG ORIGINAL 100G 057KBR",41328,7,22968,10,1.8,5904.0,1164.79,0.1973,65.22,"A","X","S","V","A-V-X-S"],["10336 - AU WHEY PREMIUM COOKIES 900G POTE",41233,167,44231,213,0.93,246.9,151.31,0.6128,65.69,"A","Y","F","V","A-V-Y-F"],["77807 - AU AURA WHEY MORANGO 1,2KG POUCH",40090,105,34030,122,1.18,381.81,158.07,0.414,66.14,"A","X","F","V","A-V-X-F"],["AU2820 - COQUETELEIRA AURADARK 1L",39600,1,660,1,60.0,39600.0,0.0,0.0,66.59,"A","X","N","V","A-V-X-N"],["70845 - AU GLUTAMINE NATURAL 300G",39022,46,50479,64,0.77,848.3,244.19,0.2879,67.04,"A","X","F","V","A-V-X-F"],["77806 - AU AURA WHEY CHOCOLATE 1,2KG POUCH",37596,119,41111,149,0.91,315.93,131.69,0.4168,67.46,"A","X","F","V","A-V-X-F"],["77256 - AMOSTRA AU VEGAN TASTY CARAMEL MACCHIATO SACHE 35G",37500,2,21411,3,1.75,18750.0,3750.0,0.2,67.89,"A","X","N","V","A-V-X-N"],["10273 - AU ALBA FRUTAS VERMELHAS 300G V2",37330,40,40183,53,0.93,933.25,383.73,0.4112,68.31,"A","X","F","V","A-V-X-F"],["76823 - AU CREATINE 300G",37264,36,29583,38,1.26,1035.11,456.98,0.4415,68.73,"A","X","F","V","A-V-X-F"],["10161 - AU HC ORIGINAL 102G 059KBR",37207,7,36286,18,1.03,5315.29,2087.26,0.3927,69.16,"A","X","S","V","A-V-X-S"],["10217 - AMOSTRA AU CLEANPRO WHEY CACAU 30G",36867,2,0,0,0,18433.5,4066.5,0.2206,69.58,"A","X","N","V","A-V-X-N"],["77742 - AU COLÁGENO BAR TORTA DE MACA 50G 10 UNID",36720,1,356,2,103.15,36720.0,0.0,0.0,69.99,"A","X","N","V","A-V-X-N"],["77796 - AU ALBA XT BLOODY BERRY 300G",36657,40,46279,59,0.79,916.42,326.56,0.3563,70.41,"A","X","F","V","A-V-X-F"],["77430 - AMOSTRA AU COLÁGENO DERM CRANBERRY COM MORANGO 11G",36300,3,21450,4,1.69,12100.0,3676.96,0.3039,70.82,"A","X","N","V","A-V-X-N"],["77705 - AMOSTRA AU MAGNESIO INOSITOL LIMAO 6G",36300,1,18150,1,2.0,36300.0,0.0,0.0,71.23,"A","X","N","V","A-V-X-N"],["77121 - AMOSTRA AU PREBIOTIC NEUTRO 7G",35200,1,0,0,0,35200.0,0.0,0.0,71.63,"A","X","N","V","A-V-X-N"],["77092 - AMOSTRA AU COLÁGENO DERM LARANJA SACHE 11G",35200,1,0,0,0,35200.0,0.0,0.0,72.03,"A","X","N","V","A-V-X-N"],["76508 - AMOSTRA AU COLÁGENO REN.LIMAO",35200,1,8537,1,4.12,35200.0,0.0,0.0,72.43,"A","X","N","V","A-V-X-N"],["76766 - CREATINE 300G",34367,36,56401,71,0.61,954.64,560.26,0.5869,72.82,"A","Y","F","V","A-V-Y-F"],["77591 - AU OMEGA BEAT 60 CAPSULAS",34329,8,13389,7,2.56,4291.12,5667.17,1.3207,73.21,"A","Z","S","V","A-V-Z-S"],["77555 - AU ISO HYDRO BAUNILHA 900G",32760,2,0,0,0,16380.0,2100.0,0.1282,73.58,"A","X","N","V","A-V-X-N"],["77212 - AU WHEY PREMIUM MORANGO 900G POTE",32530,108,21749,104,1.5,301.2,104.29,0.3463,73.95,"A","X","F","V","A-V-X-F"],["77250 - AMOSTRA AU VEGAN TASTY CHEESECAKE DE FRUTAS VERMELHAS SACHE",30900,3,30450,5,1.01,10300.0,6646.8,0.6453,74.3,"A","Y","N","V","A-V-Y-N"],["10490 - MASSMAX BAUNILHA POUCH 3KG",30628,159,28140,205,1.09,192.63,116.23,0.6034,74.65,"A","Y","F","V","A-V-Y-F"],["77936 - AU BEEF PROTEIN FRUTAS VERMELHAS 900G",30056,88,23279,111,1.29,341.55,134.36,0.3934,74.99,"A","X","F","V","A-V-X-F"],["77193 - AU COENZIMA Q10 100 MG 60 CAPSULAS",29109,12,31039,16,0.94,2425.75,1110.09,0.4576,75.32,"A","X","S","V","A-V-X-S"],["10518 - AU CARNIFORCE SABOR BLUEBERRY 900G",29054,116,52024,250,0.56,250.47,91.45,0.3651,75.65,"A","X","F","V","A-V-X-F"],["76720 - AU HC ORIGINAL 51G 060KBR",28989,4,18615,7,1.56,7247.25,1394.35,0.1924,75.98,"A","X","S","V","A-V-X-S"],["76169 - AU CRUNCH BAR PEANUT BUTTER 12 UNID",28943,59,35962,77,0.8,490.56,128.36,0.2617,76.31,"A","X","F","V","A-V-X-F"],["10581 - AU COENZIMA Q10 200 MG 60 CAPSULAS",28908,12,17330,9,1.67,2409.0,1159.89,0.4815,76.63,"A","X","S","V","A-V-X-S"],["10126 - AU COLÁGENO II 60CAPS",28459,12,26005,13,1.09,2371.58,1220.46,0.5146,76.96,"A","Y","S","V","A-V-Y-S"],["77730 - AU WHEY PREMIUM GELATO DI LATTE  900G POTE",28323,104,33805,162,0.84,272.34,96.91,0.3558,77.28,"A","X","F","V","A-V-X-F"],["ON1153060 - AU CREATINE POWDER 300G",28078,13,22745,19,1.23,2159.85,0.53,0.0002,77.6,"A","X","S","V","A-V-X-S"],["76785 - AU OMEGA 3 60 CAPS",27948,11,33982,18,0.82,2540.73,1112.91,0.438,77.91,"A","X","S","V","A-V-X-S"],["77150 - AU ZMA 60 CAPSULAS",27054,11,25689,14,1.05,2459.45,1502.21,0.6108,78.22,"A","Y","S","V","A-V-Y-S"],["10154 - AU CREATINA ULTRA POUCH 1KG",26740,40,40683,74,0.66,668.5,243.47,0.3642,78.52,"A","X","F","V","A-V-X-F"],["77795 - AU ALBA XT ORANGE STORM 300G",26385,31,42560,54,0.62,851.13,208.75,0.2453,78.82,"A","X","F","V","A-V-X-F"],["77755 - AU VITAMINA B12 120 CAPSULAS",26304,12,16343,11,1.61,2192.0,1084.53,0.4948,79.12,"A","X","S","V","A-V-X-S"],["10210 - AU CRUNCH BAR CHURROS 12 UNID",25599,18,0,0,0,1422.17,73.53,0.0517,79.41,"A","X","F","V","A-V-X-F"],["10721 - AU WHEY 100% COOKIES 10 UNIDS 30G DISPLAY",24790,39,3289,11,7.54,635.64,116.48,0.1832,79.69,"A","X","F","V","A-V-X-F"],["77754 - AU ALBA XT NEON BERRY 300G",24765,26,38571,49,0.64,952.5,395.66,0.4154,79.98,"A","X","F","V","A-V-X-F"],["77942 - AU ALBA VULCAN SPICY MELON 300G",24572,25,34585,44,0.71,982.88,416.45,0.4237,80.25,"B","X","F","E","B-E-X-F"],["77525 - AU CREATINA 120 CAPSULAS",23142,8,20045,13,1.15,2892.75,1743.76,0.6028,80.52,"B","Y","S","E","B-E-Y-S"],["10294 - AU PREBIOTIC NEUTRO 210G",22893,25,24063,31,0.95,915.72,302.2,0.33,80.78,"B","X","F","E","B-E-X-F"],["10476 - MASSMAX MORANGO POUCH 3KG",22708,118,28352,204,0.8,192.44,103.36,0.5371,81.03,"B","Y","F","E","B-E-Y-F"],["AU2898 - AU COQUETELEIRA PRETA 1 DOSE 600 ML",22640,18,10000,16,2.26,1257.78,154.47,0.1228,81.29,"B","X","F","E","B-E-X-F"],["10392 - AU VITD3K2 LIQUIDA 20ML 1 UN",22000,3,11350,3,1.94,7333.33,3771.24,0.5143,81.54,"B","Y","N","E","B-E-Y-N"],["77783 - AU COLÁGENO BAR BROWNIE DE CHOCOLATE 50G 10 UNID",21448,2,0,0,0,10724.0,10084.0,0.9403,81.78,"B","Y","N","E","B-E-Y-N"],["77561 - AU CARNIFORCE SALTED CARAMEL 900G",21137,87,17426,84,1.21,242.95,86.36,0.3555,82.02,"B","X","F","E","B-E-X-F"],["10147 - AU GLUTAMINE 500G",21050,28,19247,31,1.09,751.79,273.16,0.3634,82.26,"B","X","F","E","B-E-X-F"],["10140 - AMOSTRA AU COLÁGENO REN. LARANJA",20636,1,0,0,0,20636.0,0.0,0.0,82.5,"B","X","N","E","B-E-X-N"],["10280 - AU ALBA MACA VERDE 300G V2",20617,21,24042,30,0.86,981.76,417.92,0.4257,82.73,"B","X","F","E","B-E-X-F"],["76350 - AU GLUTAMINE NATURAL 150G",20555,17,40383,34,0.51,1209.12,347.18,0.2871,82.96,"B","X","F","E","B-E-X-F"],["77320 - AU VITB12 LIQUIDA 20ML 1 UN",20000,2,21800,6,0.92,10000.0,0.0,0.0,83.19,"B","X","N","E","B-E-X-N"],["77562 - AU OMEGA 3 200 CAPSULAS",19920,11,26788,19,0.74,1810.91,797.74,0.4405,83.42,"B","X","S","E","B-E-X-S"],["10119 - AU GLUTAMINE 150G",19787,22,17650,23,1.12,899.41,305.56,0.3397,83.64,"B","X","F","E","B-E-X-F"],["77770 - AU GEL C25 PINK LEMONADE 10 UNIDADES 450G",19532,11,10365,14,1.88,1775.64,1294.27,0.7289,83.86,"B","Y","S","E","B-E-Y-S"],["77895 - AU AMOSTRA CREATINE HMB MACA VERDE COM HORTELA STICK 10G",19500,1,37650,3,0.52,19500.0,0.0,0.0,84.08,"B","X","N","E","B-E-X-N"],["76190 - AU CRUNCH BAR DOCE COCO 12 UNID V2",19196,33,2880,6,6.67,581.7,196.0,0.3369,84.3,"B","X","F","E","B-E-X-F"],["77081 - AU ALBA FRUTAS AMARELAS 300G V2",18517,24,29104,38,0.64,771.54,330.28,0.4281,84.51,"B","X","F","E","B-E-X-F"],["77222 - AU ISO TRIPLE ZERO BAUNILHA 900G POTE",17500,63,11870,57,1.47,277.78,107.99,0.3888,84.71,"B","X","F","E","B-E-X-F"],["10658 - AU GEL C25 DOUBLE ESPRESSO COM CAFEINA 10 UNDS 450G",17429,8,8843,14,1.97,2178.62,1612.33,0.7401,84.91,"B","Y","S","E","B-E-Y-S"],["77937 - AU BEEF PROTEIN CHOCOLATE 900G",16909,79,18185,87,0.93,214.04,43.2,0.2018,85.1,"B","X","F","E","B-E-X-F"],["10777 - AU WHEY 100% GELATO DI LATTE 10 UNIDS 30G DISPLAY",16880,27,3666,12,4.6,625.19,75.54,0.1208,85.29,"B","X","F","E","B-E-X-F"],["10651 - AU GEL C25 CHOCOLATE COM CAFEINA 10 UNDS 450G",16550,9,8329,10,1.99,1838.89,320.83,0.1745,85.48,"B","X","S","E","B-E-X-S"],["76326 - AU AMINO BCAA 2044 MG 90 CAPS",16224,7,16224,9,1.0,2317.71,1327.66,0.5728,85.66,"B","Y","S","E","B-E-Y-S"],["10497 - MASSMAX COOKIES POUCH 3KG",15933,95,33248,242,0.48,167.72,67.93,0.405,85.84,"B","X","F","E","B-E-X-F"],["77955 - AU CREATINA HARCORE MORANGO 30 UNIDS 3,5G DISPLAY",15778,6,16252,12,0.97,2629.67,978.53,0.3721,86.02,"B","X","S","E","B-E-X-S"],["10728 - AU ALBA PW FRUTAS VERMELHAS 20 UNIDS 5G DISPLAY",15736,7,12728,10,1.24,2248.0,528.74,0.2352,86.2,"B","X","S","E","B-E-X-S"],["AU3106 - AU WHEY ELITE MORANGO 2.00LBS 907G",15654,15,542,3,28.88,1043.6,2185.97,2.0946,86.38,"B","Z","F","E","B-E-Z-F"],["10175 - AU GLUTAMINE 300 G",15465,3,0,0,0,5155.0,2964.91,0.5752,86.56,"B","Y","N","E","B-E-Y-N"],["10441 - AU DHA 1000 120 CAPSULAS",15355,9,12898,8,1.19,1706.11,896.64,0.5255,86.73,"B","Y","S","E","B-E-Y-S"],["77727 - AU THERMA PROULTRA 60 CAPS",15236,6,44632,23,0.34,2539.33,1272.48,0.5011,86.9,"B","Y","S","E","B-E-Y-S"],["77710 - AU VASCULOR POWDER MORANGO COM LIMAO 300G",15066,15,21830,29,0.69,1004.4,449.56,0.4476,87.07,"B","X","F","E","B-E-X-F"],["77268 - AMOSTRA AU COLÁGENO PRO CHA MATE COM PESSEGO SACHE 25G",15000,1,7500,1,2.0,15000.0,0.0,0.0,87.24,"B","X","N","E","B-E-X-N"],["76382 - AU COLÁGENO RENEW LIMAO 300G",14956,17,21113,29,0.71,879.76,357.89,0.4068,87.41,"B","X","F","E","B-E-X-F"],["10637 - AU GEL C25 NEUTRO 10 UNIDADES 450G",14821,9,10422,15,1.42,1646.78,1564.69,0.9502,87.58,"B","Y","S","E","B-E-Y-S"],["77253 - AU VEGAN TASTY BROWNIE DE CHOCOLATE 420G",14441,15,11774,20,1.23,962.73,345.67,0.359,87.75,"B","X","F","E","B-E-X-F"],["10679 - AU CREATINA ULTRA 500G POUCH",14400,14,86144,112,0.17,1028.57,361.4,0.3514,87.91,"B","X","S","E","B-E-X-S"],["76889 - AU COLÁGENO RENEW MORANGO 300G",14400,17,21259,27,0.68,847.06,188.24,0.2222,88.07,"B","X","F","E","B-E-X-F"],["77956 - AU CREATINA HARCORE LIMAO 30 UNIDS 3,5G DISPLAY",14304,6,12240,10,1.17,2384.0,663.81,0.2784,88.23,"B","X","S","E","B-E-X-S"],["10763 - AU PRIME MD FRUTAS VERMELHAS 300G",14280,16,30502,40,0.47,892.5,467.83,0.5242,88.4,"B","Y","F","E","B-E-Y-F"],["10756 - AU CREATINE HMB MACA VERDE COM HORTELA LATA 300G",13995,10,10371,14,1.35,1399.5,453.69,0.3242,88.56,"B","X","S","E","B-E-X-S"],["10770 - AU PRIME MD JABUTICABA E LIMAO 300G",13600,11,26490,34,0.51,1236.36,398.34,0.3222,88.71,"B","X","S","E","B-E-X-S"],["77836 - AU ALBA PW MACA VERDE 20 UNIDS 5G DISPLAY",13484,6,8276,7,1.63,2247.33,996.52,0.4434,88.86,"B","X","S","E","B-E-X-S"],["77763 - AU CREATINE HMB MORANGO 300G",13456,15,21259,28,0.63,897.07,387.02,0.4314,89.02,"B","X","F","E","B-E-X-F"],["76723 - AU 058KBR NRG ORIGINAL 60G",13216,3,6608,3,2.0,4405.33,1915.79,0.4349,89.17,"B","X","N","E","B-E-X-N"],["10707 - AU WHEY 100% CHOCOLATE 10 UNIDS 30G DISPLAY",13162,21,3702,12,3.56,626.76,58.76,0.0937,89.31,"B","X","F","E","B-E-X-F"],["10630 - AU GEL C25 BANANA 10 UNDS 450G",13108,5,12684,17,1.03,2621.6,1361.08,0.5192,89.46,"B","Y","S","E","B-E-Y-S"],["10462 - AU GOOD MOOD 60 CAPSULAS",13044,4,29670,17,0.44,3261.0,971.94,0.298,89.61,"B","X","S","E","B-E-X-S"],["77265 - AU COLÁGENO PRO NEUTRO 450G",12980,17,13974,23,0.93,763.53,298.48,0.3909,89.76,"B","X","F","E","B-E-X-F"],["10378 - AU HUNGER BUBBLE GUM 320G",12810,5,4166,6,3.07,2562.0,3275.72,1.2786,89.9,"B","Z","S","E","B-E-Z-S"],["77483 - AU DARK BAR FLOCOS COM CHOC CHIPS 8UN",12791,29,11160,31,1.15,441.07,160.3,0.3634,90.05,"B","X","F","E","B-E-X-F"],["77766 - AU VIT B COMPLEX 60 CAPS",12784,4,9641,5,1.33,3196.0,1084.0,0.3392,90.19,"B","X","S","E","B-E-X-S"],["10133 - AU COLÁGENO POWDER LIMAO 300G",12355,3,0,0,0,4118.33,3349.23,0.8132,90.33,"B","Y","N","E","B-E-Y-N"],["10644 - AU GEL C25 SALTED CARAMEL COM CAFEINA 10 UNDS 450G",12281,5,5810,8,2.11,2456.2,1261.61,0.5136,90.47,"B","Y","S","E","B-E-Y-S"],["10714 - AU WHEY 100% BAUNILHA 10 UNIDS 30G DISPLAY",12248,20,2284,8,5.36,612.4,118.48,0.1935,90.61,"B","X","F","E","B-E-X-F"],["10224 - AU COLÁGENO DERM LARANJA 330G",12188,9,6006,8,2.03,1354.22,596.94,0.4408,90.75,"B","X","S","E","B-E-X-S"],["77823 - AMOSTRA AU CLEANPRO WHEY ZERO BAUNILHA 30G",12000,1,9650,2,1.24,12000.0,0.0,0.0,90.89,"B","X","N","E","B-E-X-N"],["77824 - AMOSTRA AU CLEANPRO WHEY ZERO CHOCOLATE 30G",12000,1,9700,2,1.24,12000.0,0.0,0.0,91.02,"B","X","N","E","B-E-X-N"],["10287 - AU ALBA UVA 300G V2",11899,14,17207,23,0.69,849.93,332.63,0.3914,91.16,"B","X","S","E","B-E-X-S"],["76890 - AU COLÁGENO RENEW MACA VERDE 300G",11727,10,9076,12,1.29,1172.7,434.22,0.3703,91.29,"B","X","S","E","B-E-X-S"],["ON1141625 - AU LAPAC 100% WGS GF DBL RICH CHOC 907G",11674,17,155,1,75.32,686.71,149.0,0.217,91.42,"B","X","F","E","B-E-X-F"],["77105 - AU VITAMINA D3 60 CAPSULAS",11490,5,17358,9,0.66,2298.0,1066.27,0.464,91.55,"B","X","S","E","B-E-X-S"],["76853 - AU PROPOLIS VERDE 60 CAPSULAS",11372,3,12916,6,0.88,3790.67,612.83,0.1617,91.68,"B","X","N","E","B-E-X-N"],["77083 - AU ALBA LIMAO 300G V2",11247,13,15636,21,0.72,865.15,330.34,0.3818,91.81,"B","X","S","E","B-E-X-S"],["AU2859 - AU GALAO 2,2L",11184,14,11712,27,0.95,798.86,240.42,0.3009,91.94,"B","X","S","E","B-E-X-S"],["77484 - AU DARK BAR CREME DE COCO COM CASTANHA 8UN",11160,26,13750,39,0.81,429.23,141.88,0.3305,92.06,"B","X","F","E","B-E-X-F"],["10252 - AU BETA-ALANINA 123G",10800,8,26398,23,0.41,1350.0,396.86,0.294,92.19,"B","X","S","E","B-E-X-S"],["10420 - AU MY WHEY PO BAUNILHA 900G POTE",10702,47,11955,58,0.9,227.7,72.61,0.3189,92.31,"B","X","F","E","B-E-X-F"],["77957 - AU CREATINE HMB FRUTAS AMARELAS LATA 300G",10572,9,10411,14,1.02,1174.67,383.87,0.3268,92.43,"B","X","S","E","B-E-X-S"],["10595 - AU BOOSTER SABOR ENERGY DRINK 269ML 6UNIDS",10322,8,560,1,18.43,1290.25,423.67,0.3284,92.55,"B","X","S","E","B-E-X-S"],["77365 - AU MY WHEY PO MORANGO 900G POTE",10212,47,7679,38,1.33,217.28,85.73,0.3945,92.66,"B","X","F","E","B-E-X-F"],["76949 - AU VITA PURE SUPER 60 TABLETES",10080,3,6787,4,1.49,3360.0,0.0,0.0,92.78,"B","X","N","E","B-E-X-N"],["ON1141891 - AU LAPAC 100% WGS GF VAN ICE CRM 907G",10062,19,284,2,35.43,529.58,141.64,0.2675,92.89,"B","X","F","E","B-E-X-F"],["10791 - AU CLEANPRO WHEY ZERO LACTOSE DOCE DE LEITE 450G",10028,13,1966,7,5.1,771.38,485.34,0.6292,93.0,"B","Y","S","E","B-E-Y-S"],["77364 - AU MY WHEY PO CHOCOLATE 900G POTE",9984,43,23921,115,0.42,232.19,74.8,0.3222,93.12,"B","X","F","E","B-E-X-F"],["77868 - AU CREATINA 600G",9776,16,11337,18,0.86,611.0,112.32,0.1838,93.23,"B","X","F","E","B-E-X-F"],["76964 - AU ARTRO AID LARANJA 200G",9766,7,4533,6,2.15,1395.14,326.93,0.2343,93.34,"B","X","S","E","B-E-X-S"],["ON1162194 - AU CREAPURE 300G",9712,4,11856,11,0.82,2428.0,468.81,0.1931,93.45,"B","X","S","E","B-E-X-S"],["10266 - AU ALBA UVA 150G V2",9376,5,13494,13,0.69,1875.2,557.33,0.2972,93.56,"B","X","S","E","B-E-X-S"],["77074 - AU ALBA FRUTAS VERMELHAS 150G V2",9244,7,20647,19,0.45,1320.57,457.47,0.3464,93.66,"B","X","S","E","B-E-X-S"],["76191 - AU VO2 WHEY BAR 12 UNI CHOCOLATE",9206,7,10700,14,0.86,1315.14,507.52,0.3859,93.76,"B","X","S","E","B-E-X-S"],["10735 - AU PRE-TREINO MOVE- UP FRUTAS VERMELHAS CARTUCHO 30UN",9152,4,14992,14,0.61,2288.0,157.07,0.0687,93.87,"B","X","S","E","B-E-X-S"],["ON1160283 - AU CREATINE UNFLAVORED 600G",8910,6,2640,5,3.38,1485.0,1201.87,0.8093,93.97,"B","Y","S","E","B-E-Y-S"],["77798 - AU CLEANPRO WHEY ZERO LAC BAUNILHA 450G",8893,11,8965,15,0.99,808.45,335.06,0.4144,94.07,"B","X","S","E","B-E-X-S"],["77482 - AU DARK  BAR CHOCOLATE AMARGO CASTANHAS 8UN",8858,23,11170,32,0.79,385.13,111.71,0.2901,94.17,"B","X","F","E","B-E-X-F"],["77488 - AU DARK BAR COOKIES AND CREAM COM NIBS DE CACAU 8 UN",8822,24,9385,27,0.94,367.58,129.56,0.3525,94.27,"B","X","F","E","B-E-X-F"],["10084 - AU WHEY PREMIUM BAUNILHA 1,8KG POUCH",8502,44,6999,51,1.21,193.23,87.49,0.4528,94.37,"B","X","F","E","B-E-X-F"],["76199 - AU VO2 WHEY BAR 12 UNI COOKIES",8417,8,6058,8,1.39,1052.12,695.35,0.6609,94.46,"B","Y","S","E","B-E-Y-S"],["77573 - AMOSTRA AU CARNIFORCE SABOR CHOCOLATE 35G",8400,1,0,0,0,8400.0,0.0,0.0,94.56,"B","X","N","E","B-E-X-N"],["77439 - AU COLÁGENO DERM CRANBERRY COM MORANGO 330G",8330,8,2990,4,2.79,1041.25,443.19,0.4256,94.65,"B","X","S","E","B-E-X-S"],["76197 - AU VO2 WHEY BAR 12 UNI MORANGO",8228,5,14164,15,0.58,1645.6,456.6,0.2775,94.75,"B","X","S","E","B-E-X-S"],["77033 - AU NATURAL SLEEP 60 CAPSULAS",8139,5,20754,11,0.39,1627.8,1333.39,0.8191,94.84,"B","Y","S","E","B-E-Y-S"],["AU2807 - GALAO BODYFIT 2,2L",8064,11,5472,15,1.47,733.09,201.67,0.2751,94.93,"B","X","S","E","B-E-X-S"],["77708 - AU VASCULOR POWDER MACA VERDE 300G",8000,9,7589,10,1.05,888.89,251.42,0.2828,95.02,"C","X","S","D","C-D-X-S"],["76725 - AU 056KBR NRG MATE 100G GUAR",7918,2,7913,4,1.0,3959.0,649.0,0.1639,95.11,"C","X","N","D","C-D-X-N"],["10112 - AU COLÁGENO RENEW LARANJA 300G",7844,9,21191,28,0.37,871.56,262.1,0.3007,95.2,"C","X","S","D","C-D-X-S"],["77799 - AU CLEANPRO WHEY ZERO LAC CHOCOLATE 450G",7787,10,7952,14,0.98,778.7,343.3,0.4409,95.29,"C","X","S","D","C-D-X-S"],["77255 - AU VEGAN TASTY CARAMEL MACCHIATO 420G",7251,11,16442,27,0.44,659.18,231.52,0.3512,95.37,"C","X","S","D","C-D-X-S"],["77441 - AU COLÁGENO PRO CHOCOLATE BELGA 450G",7180,10,7995,14,0.9,718.0,317.55,0.4423,95.45,"C","X","S","D","C-D-X-S"],["77709 - AU VASCULOR POWDER FRUTAS AMARELAS 300G",7164,10,9816,13,0.73,716.4,128.72,0.1797,95.53,"C","X","S","D","C-D-X-S"],["77437 - AU DARK WHEY 100% CHOCOLATE MALTADO 900G POTE",7097,29,10357,51,0.69,244.72,96.3,0.3935,95.61,"C","X","F","D","C-D-X-F"],["77948 - AU CLEANPRO WHEY ZERO LACTOSE GELATO DI LATTE 450G",6843,19,4903,16,1.4,360.16,128.83,0.3577,95.69,"C","X","F","D","C-D-X-F"],["76383 - AU COLÁGENO RENEW NEUTRO 300G",6825,8,10576,14,0.65,853.12,307.82,0.3608,95.77,"C","X","S","D","C-D-X-S"],["77703 - AU MAGNESIO INOSITOL LIMAO 300G",6758,5,9673,13,0.7,1351.6,324.61,0.2402,95.85,"C","X","S","D","C-D-X-S"],["ON1141896 - AU LAPAC 100% WGS GF VAN ICE CRM 2.27KG",6728,26,1750,15,3.84,258.77,127.6,0.4931,95.92,"C","X","F","D","C-D-X-F"],["77732 - AU OXYDROL 120 CAPSULAS",6720,4,11736,11,0.57,1680.0,581.97,0.3464,96.0,"C","X","S","D","C-D-X-S"],["10602 - AU ALBA DRINK MACA VERDE 6 UNID 269 ML",6720,6,560,1,12.0,1120.0,0.0,0.0,96.07,"C","X","S","D","C-D-X-S"],["77438 - AU COLÁGENO DERM ABACAXI COM HORTELA 330G",6592,5,3670,5,1.8,1318.4,372.85,0.2828,96.15,"C","X","S","D","C-D-X-S"],["77196 - AU DHA 1000 60 CAPSULAS",6534,2,13097,7,0.5,3267.0,957.0,0.2929,96.22,"C","X","N","D","C-D-X-N"],["77075 - AU ALBA LIMAO 150G V2",6509,5,8474,8,0.77,1301.8,724.12,0.5562,96.3,"C","Y","S","D","C-D-Y-S"],["77557 - AU OMEGA 3 120 CAPSULAS",6488,4,5248,5,1.24,1622.0,1114.78,0.6873,96.37,"C","Y","S","D","C-D-Y-S"],["ON1153377 - AU CREATINA LIMONADA BLUEBERRY 360G",6472,3,7552,7,0.86,2157.33,2.49,0.0012,96.44,"C","X","N","D","C-D-X-N"],["10784 - AU CREATINA CREAPURE 300G",6400,6,12000,15,0.53,1066.67,377.12,0.3536,96.52,"C","X","S","D","C-D-X-S"],["76740 - AU WHEY PREMIUM COOKIES 1,8KG POUCH",6333,40,7429,55,0.85,158.32,68.43,0.4322,96.59,"C","X","F","D","C-D-X-F"],["76671 - AU NUTRI YEAST FLAKES 100G",6151,5,5879,8,1.05,1230.2,459.7,0.3737,96.66,"C","X","S","D","C-D-X-S"],["77434 - AU DARK WHEY 100% BAUNILHA 900G POTE",6079,25,9560,44,0.64,243.16,77.2,0.3175,96.73,"C","X","F","D","C-D-X-F"],["77223 - AU ISO TRIPLE ZERO CHOCOLATE 900G POTE",6051,25,10506,50,0.58,242.04,98.07,0.4052,96.8,"C","X","F","D","C-D-X-F"],["10035 - AU MALTODEXTRIN UVA POUCH 1KG",5955,5,0,0,0,1191.0,862.29,0.724,96.86,"C","Y","S","D","C-D-Y-S"],["77263 - AU COLÁGENO PRO CHA BRANCO COM LICHIA 450G",5841,7,5039,8,1.16,834.43,427.06,0.5118,96.93,"C","Y","S","D","C-D-Y-S"],["10301 - AU VEGANPRO BAUNILHA 450G",5805,8,5878,11,0.99,725.62,371.1,0.5114,97.0,"C","Y","S","D","C-D-Y-S"],["77440 - AU COLÁGENO PRO BAUNILHA 450G",5710,9,3012,6,1.9,634.44,401.19,0.6323,97.06,"C","Y","S","D","C-D-Y-S"],["76952 - AU NUTRI YEAST FLAKES 300G",5666,7,5914,10,0.96,809.43,299.31,0.3698,97.13,"C","X","S","D","C-D-X-S"],["77811 - AU AURA WHEY MORANGO 2,4KG POUCH",5253,15,6779,49,0.77,350.2,105.12,0.3002,97.18,"C","X","F","D","C-D-X-F"],["77918 - AU COLÁGENO DRINK SPRITZ 6 UN",5220,4,4640,8,1.12,1305.0,251.15,0.1925,97.24,"C","X","S","D","C-D-X-S"],["77920 - AU COLÁGENO DRINK CLERICOT 6UN",5220,4,4640,8,1.12,1305.0,251.15,0.1925,97.3,"C","X","S","D","C-D-X-S"],["77481 - AU DARK  BAR PEANUT BUTTER AMENDOIM 8UN",5209,14,4849,15,1.07,372.07,171.33,0.4605,97.36,"C","X","S","D","C-D-X-S"],["ON1142252 - AU LAPAC 100% WGS GF Cookies & Cream 907G",5204,11,0,0,0,473.09,97.74,0.2066,97.42,"C","X","S","D","C-D-X-S"],["77538 - AU CREATINE TASTY MORANGO 210G",5148,3,5265,5,0.98,1716.0,646.99,0.377,97.48,"C","X","N","D","C-D-X-N"],["MR0012 - SQUEEZE 800ML VERMELHA AURORA",5120,4,720,1,7.11,1280.0,277.13,0.2165,97.54,"C","X","N","D","C-D-X-N"],["77746 - AU BOOSTER SABOR PURPLE BLAST 269ML 6UNIDS",5040,1,0,0,0,5040.0,0.0,0.0,97.59,"C","X","N","D","C-D-X-N"],["10413 - AU PUROX CARTUCHO 30UN",4980,2,2100,2,2.37,2490.0,150.0,0.0602,97.65,"C","X","N","D","C-D-X-N"],["76929 - AU 147KBR WHEY CHOCO 510G",4944,7,7014,20,0.7,706.29,151.17,0.214,97.71,"C","X","S","D","C-D-X-S"],["77110 - AU VEGANPRO CACAU 450G",4887,6,6952,13,0.7,814.5,465.96,0.5721,97.76,"C","Y","S","D","C-D-Y-S"],["AU2612 - CAIXA DE EMBARQUE AURANUTRI EXCLUSIVA PARA KIT",4800,1,16075,10,0.3,4800.0,0.0,0.0,97.82,"C","X","N","D","C-D-X-N"],["76921 - AU CLEANPRO WHEY CHOCOLATE 450G",4636,5,2009,4,2.31,927.2,611.53,0.6595,97.87,"C","Y","S","D","C-D-Y-S"],["76726 - AU 061KBR HC CINNAM 102G",4608,1,2304,1,2.0,4608.0,0.0,0.0,97.92,"C","X","N","D","C-D-X-N"],["77192 - AU CURCUMINA 30 CAPSULAS",4541,2,4224,2,1.08,2270.5,1953.5,0.8604,97.97,"C","Y","N","D","C-D-Y-N"],["MR3046 - AU COQUETELEIRA 1L",4540,3,3850,6,1.18,1513.33,331.6,0.2191,98.03,"C","X","N","D","C-D-X-N"],["10371 - AU HUNGER BLUE RAZZ 320G",4521,4,1373,2,3.29,1130.25,525.83,0.4652,98.08,"C","X","N","D","C-D-X-N"],["77249 - AU VEGAN TASTY CHEESECAKE DE FRUTAS VERMELHAS 420G",4480,5,6692,12,0.67,896.0,313.53,0.3499,98.13,"C","X","S","D","C-D-X-S"],["10742 - AU PRE-TREINO MOVE- UP FRUTAS AMARELAS CARTUCHO 30UN",4392,2,11744,11,0.37,2196.0,4.0,0.0018,98.18,"C","X","N","D","C-D-X-N"],["76176 - AU WHEY PREMIUM CHOCOLATE 1,8KG POUCH",4383,29,4011,30,1.09,151.14,52.25,0.3457,98.23,"C","X","F","D","C-D-X-F"],["77267 - AU COLÁGENO PRO CHA MATE COM PESSEGO 450G",4280,7,3988,8,1.07,611.43,336.27,0.55,98.28,"C","Y","S","D","C-D-Y-S"],["76887 - AU MALTODEXTRIN LIMAO POUCH 1KG",4200,1,0,0,0,4200.0,0.0,0.0,98.32,"C","X","N","D","C-D-X-N"],["10693 - AU AURA WHEY BAUNILHA 2,4KG POUCH",4167,20,5427,39,0.77,208.35,71.99,0.3455,98.37,"C","X","F","D","C-D-X-F"],["77539 - AU CREATINE TASTY LIMONADA SUICA 210G",4152,3,7078,7,0.59,1384.0,147.08,0.1063,98.42,"C","X","N","D","C-D-X-N"],["77073 - AU ALBA FRUTAS AMARELAS 150G V2",4144,4,9816,9,0.42,1036.0,284.06,0.2742,98.46,"C","X","N","D","C-D-X-N"],["AU3002 - AU WHEY GOURMET CHOCOLATE MALTADO 900G",4122,8,252,1,16.36,515.25,230.33,0.447,98.51,"C","X","S","D","C-D-X-S"],["76891 - AU COLÁGENO RENEW JABUTICABA 300G",4031,4,3488,5,1.16,1007.75,454.11,0.4506,98.56,"C","X","N","D","C-D-X-N"],["ON1141623 - AU LAPAC 100% WGS GF DBL RICH CHCOLATE 2.27KG",4010,17,815,7,4.92,235.88,67.85,0.2876,98.6,"C","X","F","D","C-D-X-F"],["77704 - AU MAGNÉSIO INOSITOL LUCHIA 300G",4000,4,5949,8,0.67,1000.0,346.41,0.3464,98.65,"C","X","N","D","C-D-X-N"],["AU2833 - AU COQUETELEIRA 2 DOSES VERMELHA TRITAN",4000,5,3500,8,1.14,800.0,360.44,0.4506,98.69,"C","X","S","D","C-D-X-S"],["76965 - AU IMMUNE UP PROPOLIS, LIMAO E MEL 200G",3840,4,4467,6,0.86,960.0,375.23,0.3909,98.74,"C","X","N","D","C-D-X-N"],["77208 - AU CLEANPRO WHEY BAUNILHA 450G",3813,7,5307,10,0.72,544.71,161.63,0.2967,98.78,"C","X","S","D","C-D-X-S"],["10700 - AU AURA WHEY CHOCOLATE 2,4KG POUCH",3763,18,8958,65,0.42,209.06,85.0,0.4066,98.82,"C","X","F","D","C-D-X-F"],["77237 - AU HUNGER APPLE DREAM 320G",3708,4,4841,7,0.77,927.0,406.43,0.4384,98.87,"C","X","N","D","C-D-X-N"],["MK5716 - COQUETELEIRA PRETA 600ML OPTIMUM",3600,3,2418,4,1.49,1200.0,0.0,0.0,98.91,"C","X","N","D","C-D-X-N"],["10532 - AU COLÁGENO DRINK RED BERRIES 6UNID 269ML",3528,3,504,1,7.0,1176.0,237.59,0.202,98.95,"C","X","N","D","C-D-X-N"],["10455 - AU COLÁGENO DRINK PINEAPPLE LEMON MINT 6UNID 269ML",3528,3,2554,5,1.38,1176.0,237.59,0.202,98.99,"C","X","N","D","C-D-X-N"],["77224 - AU ISO TRIPLE ZERO MORANGO 900G POTE",3455,14,0,0,0,246.79,94.09,0.3812,99.03,"C","X","S","D","C-D-X-S"],["76920 - AU CLEANPRO WHEY CACAU 450G",3322,6,5586,11,0.59,553.67,381.46,0.689,99.06,"C","Y","S","D","C-D-Y-S"],["AU2729 - AU COQUETELEIRA \u00c1TICA 1 DOSE 600ML VERMELHA",3240,1,0,0,0,3240.0,0.0,0.0,99.1,"C","X","N","D","C-D-X-N"],["76175 - AU WHEY PREMIUM MORANGO 1,8KG POUCH",3203,21,2995,23,1.07,152.52,57.26,0.3754,99.14,"C","X","F","D","C-D-X-F"],["10784 - AU CREATINA CREAPURE 300G POTE",3200,2,6046,8,0.53,1600.0,0.0,0.0,99.17,"C","X","N","D","C-D-X-N"],["AU3197 - AU LATAM CREATINE CAPSULES 90CAPS",3072,1,0,0,0,3072.0,0.0,0.0,99.21,"C","X","N","D","C-D-X-N"],["ON1141990 - AU WHEY ELITE MORANGO 5.00LBS 2.27KG",2936,11,680,6,4.32,266.91,107.18,0.4016,99.24,"C","X","S","D","C-D-X-S"],["10574 - AU THERMA PROULTRA 120 CAPS",2825,3,15183,13,0.19,941.67,609.46,0.6472,99.27,"C","Y","N","D","C-D-Y-N"],["77748 - AU BOOSTER ENERGY DRINK GUARANA 6 UNDS 269ML",2790,2,289,1,9.65,1395.0,817.0,0.5857,99.3,"C","Y","N","D","C-D-Y-N"],["MK2741 -  SQUEEZE VERMELHO 880ML TRADE",2700,1,0,0,0,2700.0,0.0,0.0,99.33,"C","X","N","D","C-D-X-N"],["10259 - AU ALBA MACA VERDE 150G V2",2634,3,13415,13,0.2,878.0,455.38,0.5187,99.36,"C","Y","N","D","C-D-Y-N"],["AU2521 - FITA ADESIVA TRANSP. IMPRESSA CONTRA VIOLACAO 72MM X 100M (G",2496,1,14640,10,0.17,2496.0,0.0,0.0,99.39,"C","X","N","D","C-D-X-N"],["76861 - AU NRG MATE FLAVOR 330G 003KBR GUARANA TROPICAL",2434,2,3695,6,0.66,1217.0,319.0,0.2621,99.42,"C","X","N","D","C-D-X-N"],["ME4439 - FITA GOMADA COM REFORCO S/ TUBETE 70MM (E-COMMERCE)",2376,4,1188,4,2.0,594.0,10.39,0.0175,99.45,"C","X","N","D","C-D-X-N"],["MR2820 - AU COQUETELEIRA TRITAN TRANSPARENTE AURANUTRI",2200,3,1000,2,2.2,733.33,249.44,0.3402,99.47,"C","X","N","D","C-D-X-N"],["10196 - AU 004KBR HC ORIGINAL 357G",2196,2,8335,13,0.26,1098.0,438.0,0.3989,99.5,"C","X","N","D","C-D-X-N"],["ON1159633 - AU AMINO ENERGY MELANCIA 270G",2164,2,0,0,0,1082.0,338.0,0.3124,99.52,"C","X","N","D","C-D-X-N"],["10567 - AU DARK  BAR CREME DE AVELA COM CHOCOLATE 8UN",2160,5,2644,8,0.82,432.0,144.0,0.3333,99.55,"C","X","S","D","C-D-X-S"],["AU2989 - AU WHEY GOURMET SORVETE DE BAUNILHA BAUNILHA 900G",2158,5,252,1,8.56,431.6,144.8,0.3355,99.57,"C","X","S","D","C-D-X-S"],["AU3171 - AU WHEY GOURMET CHOCOLATE BRANCO 900G",2046,4,0,0,0,511.5,167.75,0.328,99.59,"C","X","N","D","C-D-X-N"],["ON1111988 - AU WHEY ELITE BANANA COM MORANGO 2.00LBS 907G",2022,5,252,1,8.02,404.4,158.09,0.3909,99.62,"C","X","S","D","C-D-X-S"],["MK5715 - COQUETELEIRA TRANSPARENTE 600ML OPTIMUM",1998,2,2998,5,0.67,999.0,199.0,0.1992,99.64,"C","X","N","D","C-D-X-N"],["76193 - AU VO2 WHEY BAR 12 UNI COCO",1758,2,0,0,0,879.0,129.0,0.1468,99.66,"C","X","N","D","C-D-X-N"],["AU2703 - AU GALAO 2,2L",1728,1,0,0,0,1728.0,0.0,0.0,99.68,"C","X","N","D","C-D-X-N"],["77716 - AMOSTRA AU VASCULOR POWDER MACA VERDE 10G",1700,1,0,0,0,1700.0,0.0,0.0,99.7,"C","X","N","D","C-D-X-N"],["AU3210 - AU AMINO ENERGY FUSAO DE FRUTAS 270G",1678,1,0,0,0,1678.0,0.0,0.0,99.72,"C","X","N","D","C-D-X-N"],["AU3184 - AU WHEY GOURMET COOKIES&CREAM 900G",1605,4,566,4,2.84,401.25,177.97,0.4435,99.74,"C","X","N","D","C-D-X-N"],["ON1113533 - BSN SYNTHA 6 BAUNILHA MILKSHAKE 4.01LBS 1.82KG",1570,7,120,1,13.08,224.29,38.49,0.1716,99.75,"C","X","S","D","C-D-X-S"],["10385 - AU AURAWHEY BAUNILHA POUCH 900G",1400,2,350,1,4.0,700.0,0.0,0.0,99.77,"C","X","N","D","C-D-X-N"],["76360 - AU ISO TRIPLE ZERO PT 1,8KG BAU",1295,10,395,4,3.28,129.5,46.18,0.3566,99.78,"C","X","S","D","C-D-X-S"],["10203 - AU CLEANPRO WHEY FRUTAS VERMELHAS 450G",1280,2,1983,4,0.65,640.0,0.0,0.0,99.8,"C","X","N","D","C-D-X-N"],["ON1113318 - AU WHEY PLATINUM HYDRO MORANGO 1.76LB 800G",1250,2,0,0,0,625.0,455.0,0.728,99.81,"C","Y","N","D","C-D-Y-N"],["10672 - AU COLÁGENO BAR CHEESECAKE DE FRUTAS VERMELHAS 50G 10 UNID",1222,2,0,0,0,611.0,251.0,0.4108,99.83,"C","X","N","D","C-D-X-N"],["ON1086459 - AU WHEY GOLD ISOLATE CHOCOLATE 3.00 LBS 1.36KG",1176,4,216,2,5.44,294.0,154.03,0.5239,99.84,"C","Y","N","D","C-D-Y-N"],["MR2817 - AU COQUETELEIRA 1 DOSE TRANSPARENTE TRITAN",990,1,0,0,0,990.0,0.0,0.0,99.85,"C","X","N","D","C-D-X-N"],["ON1116318 - AU WHEY PLATINUM HYDRO BAUNILHA 1.76LB 800G",900,1,0,0,0,900.0,0.0,0.0,99.86,"C","X","N","D","C-D-X-N"],["77780 - AU COLÁGENO BAR TORTA DE LIMAO 50G 10 UNID",856,2,0,0,0,428.0,4.0,0.0093,99.87,"C","X","N","D","C-D-X-N"],["ON1142253 - AU WHEY ELITE COOKIES & CREAM 5.00LBS 2.27KG",816,4,0,0,0,204.0,62.35,0.3057,99.88,"C","X","N","D","C-D-X-N"],["ON1113532 - BSN SYNTHA 6 BAUNILHA MILKSHAKE 2.34LBS 1.06KG",766,2,0,0,0,383.0,121.0,0.3159,99.89,"C","X","N","D","C-D-X-N"],["77281 - AU AURAWHEY CHOCOLATE POUCH 900G",758,3,0,0,0,252.67,137.65,0.5448,99.9,"C","Y","N","D","C-D-Y-N"],["ON1113534 - BSN SYNTHA 6 CHOCOLATE MILKSHAKE 2.34LBS 1.12KG",730,2,0,0,0,365.0,139.0,0.3808,99.91,"C","X","N","D","C-D-X-N"],["76362 - AU ISO TRIPLE ZERO PT 1,8KG MOR",703,5,392,4,1.79,140.6,75.77,0.5389,99.91,"C","Y","S","D","C-D-Y-S"],["ON1087526 - AU LAPAC GS ISOLATE GF VANILLA 2.28KG",672,2,0,0,0,336.0,144.0,0.4286,99.92,"C","X","N","D","C-D-X-N"],["AU2976 - BSN SYNTHA 6 MORANGO MILKSHAKE 2.35LBS 1.07KG",646,2,0,0,0,323.0,181.0,0.5604,99.93,"C","Y","N","D","C-D-Y-N"],["77111 - AU VEGANPRO TORTA DE BANANA 450G",608,1,0,0,0,608.0,0.0,0.0,99.94,"C","X","N","D","C-D-X-N"],["ON1116320 - AU WHEY PLATINUM HYDRO CHOCOLATE 1.80LB 820G",600,1,0,0,0,600.0,0.0,0.0,99.94,"C","X","N","D","C-D-X-N"],["77324 - AU ISO TRIPLE ZERO CHOCOLATE 1,8KG POTE",600,6,332,5,1.81,100.0,0.0,0.0,99.95,"C","X","S","D","C-D-X-S"],["AU3015 - AU WHEY PLATINUM HYDRO BAUNILHA 3.52.LBS 1.6KG",528,4,24,1,22.0,132.0,82.46,0.6247,99.96,"C","Y","N","D","C-D-Y-N"],["AU3080 - AU WHEY ELITE BANANA 2.00LBS 907G",504,1,192,1,2.62,504.0,0.0,0.0,99.96,"C","X","N","D","C-D-X-N"],["ON1158129 - AU 100% WGS GF DOUBLE RICH CHOC 682 g",480,1,240,1,2.0,480.0,0.0,0.0,99.97,"C","X","N","D","C-D-X-N"],["AU3119 - AU WHEY ELITE BAUNILHA 1.50LBS 680G",480,1,0,0,0,480.0,0.0,0.0,99.97,"C","X","N","D","C-D-X-N"],["ON1097040 - AU CREATINE PWD 600G",454,1,0,0,0,454.0,0.0,0.0,99.98,"C","X","N","D","C-D-X-N"],["AU3028 - AU WHEY PLATINUM HYDRO CHOCOLATE 3.61LBS 1.64KG",384,2,120,1,3.2,192.0,168.0,0.875,99.98,"C","Y","N","D","C-D-Y-N"],["ON1114005 - BSN SYNTHA 6 MORANGO MILKSHAKE 4.01LBS 1.82KG",384,2,0,0,0,192.0,48.0,0.25,99.99,"C","X","N","D","C-D-X-N"],["ON1146802 - AU WHEY ELITE CINNAMON ROLL 1.98LBS 900G",264,1,132,1,2.0,264.0,0.0,0.0,99.99,"C","X","N","D","C-D-X-N"],["ON1113535 - BSN SYNTHA 6 CHOCOLATE MILKSHAKE 4.23LBS 1.92KG",240,1,0,0,0,240.0,0.0,0.0,99.99,"C","X","N","D","C-D-X-N"],["ON1141835 - AU WHEY ELITE SALTED CARAMELO 5.00LBS 2.27KG",240,1,0,0,0,240.0,0.0,0.0,99.99,"C","X","N","D","C-D-X-N"],["ON1087560 - AU LAPAC GS ISOLATE GF CHOCOLATE 2.36KG",240,1,0,0,0,240.0,0.0,0.0,100.0,"C","X","N","D","C-D-X-N"],["77436 - AU DARK WHEY 100% CHOCOLATE 900G POTE",102,1,0,0,0,102.0,0.0,0.0,100.0,"C","X","N","D","C-D-X-N"],["902.1002 - MOD. VOID FILM 200 X 120 X 1125 (STANDARD)",80,1,315,9,0.25,80.0,0.0,0.0,100.0,"C","X","N","D","C-D-X-N"],["C.Q  RT - RETENÇÃO",45,22,0,0,0,2.05,0.21,0.1018,100.0,"C","X","F","D","C-D-X-F"]],"abcTop20":[["10042 - AU CREATINA 300G",2015592,22.87,"A"],["10553 - AU CRUNCH BAR CACAU CROCANTE 12 UNDS 540G",752793,31.41,"A"],["10063 - AU CREATINA 120 CPS",200303,33.69,"A"],["AU2885 - AU COQUETELEIRA NACIONAL 1 DOSE 600 ML",185880,35.79,"A"],["10105 - AU CREATINA 150G",161676,37.63,"A"],["10182 - AU VITAMINA B12 60 CAPSULAS",116597,38.95,"A"],["10588 - AU WHEY PREMIUM GELATO DI LATTE  900G",113475,40.24,"A"],["10189 - AU CRUNCH BAR LEITE EM PÓ COM CREME DE AVELA 12 UND",105645,41.44,"A"],["10308 - AU MAGNESIO BISGLICINATO 60 CAPSULAS",102060,42.6,"A"],["10504 - AU CARNIFORCE SABOR CHOCOLATE 900G",98461,43.71,"A"],["10616 - AU CREATINA ULTRA SABOR MORANGO 350G",93030,44.77,"A"],["10091 - AU CRUNCH BAR TRUFA AVELA 12 UNID V2",87253,45.76,"A"],["10322 - AU WHEY PREMIUM BAUNILHA 900G POTE",86099,46.74,"A"],["10406 - AU CRUNCH BAR DUO CRUNCH 12 UNID",84750,47.7,"A"],["10364 - AU WHEY PREMIUM COOKIES AND CREAM 900G POUCH",76927,48.57,"A"],["10399 - AU CRUNCH BAR COOKIES AND CREAM 12 UNID",76863,49.44,"A"],["10343 - AU WHEY PREMIUM BAUNILHA 900G POUCH",75188,50.3,"A"],["76961 - AU OMEGA 3 120 CAPS",75185,51.15,"A"],["10434 - AU 100% CREATINE 300G LATA",74055,51.99,"A"],["AU2846 - COQUETELEIRA 1 DOSE 60ML TRANSP",74000,52.83,"A"]],"xyzTopZ":[["AU3106 - AU WHEY ELITE MORANGO 2.00LBS 907G",2.0946,1043.6,2185.97,"Z"],["AU2846 - COQUETELEIRA 1 DOSE 60ML TRANSP",1.8819,9250.0,17407.4,"Z"],["10588 - AU WHEY PREMIUM GELATO DI LATTE  900G",1.7602,652.16,1147.95,"Z"],["77591 - AU OMEGA BEAT 60 CAPSULAS",1.3207,4291.12,5667.17,"Z"],["10378 - AU HUNGER BUBBLE GUM 320G",1.2786,2562.0,3275.72,"Z"],["10553 - AU CRUNCH BAR CACAU CROCANTE 12 UNDS 540G",0.9561,739.48,707.03,"Y"],["10637 - AU GEL C25 NEUTRO 10 UNIDADES 450G",0.9502,1646.78,1564.69,"Y"],["77783 - AU COLÁGENO BAR BROWNIE DE CHOCOLATE 50G 10 UNID",0.9403,10724.0,10084.0,"Y"],["AU3028 - AU WHEY PLATINUM HYDRO CHOCOLATE 3.61LBS 1.64KG",0.875,192.0,168.0,"Y"],["77192 - AU CURCUMINA 30 CAPSULAS",0.8604,2270.5,1953.5,"Y"],["77033 - AU NATURAL SLEEP 60 CAPSULAS",0.8191,1627.8,1333.39,"Y"],["10133 - AU COLÁGENO POWDER LIMAO 300G",0.8132,4118.33,3349.23,"Y"],["ON1160283 - AU CREATINE UNFLAVORED 600G",0.8093,1485.0,1201.87,"Y"],["10483 - MASSMAX CHOCOLATE POUCH 3KG",0.8025,238.28,191.22,"Y"],["10042 - AU CREATINA 300G",0.7778,2188.48,1702.24,"Y"]],"xyzTopX":[["10063 - AU CREATINA 120 CPS",0.4881,1820.94,888.79,"X"],["AU2885 - AU COQUETELEIRA NACIONAL 1 DOSE 600 ML",0.3043,1499.03,456.18,"X"],["10105 - AU CREATINA 150G",0.2625,2277.13,597.69,"X"],["10182 - AU VITAMINA B12 60 CAPSULAS",0.4968,2591.04,1287.34,"X"],["10189 - AU CRUNCH BAR LEITE EM PÓ COM CREME DE AVELA 12 UND",0.4399,547.38,240.82,"X"],["10308 - AU MAGNESIO BISGLICINATO 60 CAPSULAS",0.4404,2319.55,1021.53,"X"],["10504 - AU CARNIFORCE SABOR CHOCOLATE 900G",0.4662,263.26,122.73,"X"],["10616 - AU CREATINA ULTRA SABOR MORANGO 350G",0.3484,1033.67,360.09,"X"],["10091 - AU CRUNCH BAR TRUFA AVELA 12 UNID V2",0.3382,548.76,185.61,"X"],["10406 - AU CRUNCH BAR DUO CRUNCH 12 UNID",0.2543,504.46,128.27,"X"],["10364 - AU WHEY PREMIUM COOKIES AND CREAM 900G POUCH",0.4552,373.43,169.98,"X"],["10399 - AU CRUNCH BAR COOKIES AND CREAM 12 UNID",0.3129,522.88,163.62,"X"],["10343 - AU WHEY PREMIUM BAUNILHA 900G POUCH",0.2348,297.19,69.77,"X"],["10434 - AU 100% CREATINE 300G LATA",0.4909,1481.1,727.12,"X"],["10056 - AU CREATINA  60 CPS",0.4653,2370.94,1103.14,"X"]],"fsnTop15":[["10553 - AU CRUNCH BAR CACAU CROCANTE 12 UNDS 540G",1018,"F"],["10042 - AU CREATINA 300G",921,"F"],["10504 - AU CARNIFORCE SABOR CHOCOLATE 900G",374,"F"],["10322 - AU WHEY PREMIUM BAUNILHA 900G POTE",330,"F"],["10343 - AU WHEY PREMIUM BAUNILHA 900G POUCH",253,"F"],["10329 - AU WHEY PREMIUM CHOCOLATE 900G POTE",235,"F"],["10364 - AU WHEY PREMIUM COOKIES AND CREAM 900G POUCH",206,"F"],["10483 - MASSMAX CHOCOLATE POUCH 3KG",206,"F"],["10350 - AU WHEY PREMIUM CHOCOLATE 900G POUCH",200,"F"],["10189 - AU CRUNCH BAR LEITE EM PÓ COM CREME DE AVELA 12 UND",193,"F"],["10511 - AU CARNIFORCE SABOR BAUNILHA 900G",185,"F"],["10588 - AU WHEY PREMIUM GELATO DI LATTE  900G",174,"F"],["10406 - AU CRUNCH BAR DUO CRUNCH 12 UNID",168,"F"],["10336 - AU WHEY PREMIUM COOKIES 900G POTE",167,"F"],["10091 - AU CRUNCH BAR TRUFA AVELA 12 UNID V2",159,"F"]],"vedTop15V":[["10042 - AU CREATINA 300G",2015592,1.31,"V"],["10553 - AU CRUNCH BAR CACAU CROCANTE 12 UNDS 540G",752793,0.94,"V"],["10063 - AU CREATINA 120 CPS",200303,1.15,"V"],["AU2885 - AU COQUETELEIRA NACIONAL 1 DOSE 600 ML",185880,1.14,"V"],["10105 - AU CREATINA 150G",161676,0.6,"V"],["10182 - AU VITAMINA B12 60 CAPSULAS",116597,1.84,"V"],["10588 - AU WHEY PREMIUM GELATO DI LATTE  900G",113475,2.15,"V"],["10189 - AU CRUNCH BAR LEITE EM PÓ COM CREME DE AVELA 12 UND",105645,0.62,"V"],["10308 - AU MAGNESIO BISGLICINATO 60 CAPSULAS",102060,1.05,"V"],["10504 - AU CARNIFORCE SABOR CHOCOLATE 900G",98461,1.06,"V"],["10616 - AU CREATINA ULTRA SABOR MORANGO 350G",93030,1.0,"V"],["10091 - AU CRUNCH BAR TRUFA AVELA 12 UNID V2",87253,1.25,"V"],["10322 - AU WHEY PREMIUM BAUNILHA 900G POTE",86099,1.14,"V"],["10406 - AU CRUNCH BAR DUO CRUNCH 12 UNID",84750,0.8,"V"],["10364 - AU WHEY PREMIUM COOKIES AND CREAM 900G POUCH",76927,1.21,"V"]],"comboCounts":[["C-D-X-N",62],["A-V-X-F",42],["B-E-X-F",33],["C-D-X-S",31],["B-E-X-S",30],["A-V-X-N",13],["B-E-Y-S",13],["C-D-X-F",13],["C-D-Y-S",11],["A-V-X-S",10],["B-E-X-N",10],["C-D-Y-N",10],["A-V-Y-F",9],["B-E-Y-N",4],["A-V-Z-S",2],["A-V-Y-S",2],["B-E-Y-F",2],["A-V-Z-F",1],["A-V-Y-N",1],["B-E-Z-F",1],["B-E-Z-S",1]]};
+
+// columns: 0 produto,1 vol_s,2 n_s,3 vol_e,4 n_e,5 giro,6 media,7 desvio,8 cv,9 pct_acum,10 abc,11 xyz,12 fsn,13 ved,14 classe
+const TOTAL_SKUS = DATA.final.length;
+
+function fmt(n){ return new Intl.NumberFormat('pt-BR').format(n); }
+function fmt1(n){ return new Intl.NumberFormat('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:2}).format(n); }
+function tagColor(letter){
+  const map = {
+    A:'var(--a-color)', B:'var(--b-color)', C:'var(--c-color)',
+    V:'var(--a-color)', E:'var(--b-color)', D:'var(--c-color)',
+    X:'var(--good)', Y:'var(--warn)', Z:'var(--crit)',
+    F:'var(--good)', S:'var(--warn)', N:'var(--crit)'
+  };
+  return map[letter] || 'var(--muted)';
+}
+function tagHTML(letter){
+  return '<span class="tag" style="background:'+tagColor(letter)+'">'+letter+'</span>';
+}
+function nomeCurto(produto){
+  const i = produto.indexOf(' - ');
+  return i===-1 ? produto : produto.slice(i+3);
+}
+function codigo(produto){
+  const i = produto.indexOf(' - ');
+  return i===-1 ? '' : produto.slice(0,i);
+}
+
+// ---------- tabs ----------
+const tabs = document.querySelectorAll('.tab');
+tabs.forEach(t=>{
+  t.addEventListener('click', ()=>{
+    tabs.forEach(x=>x.setAttribute('aria-selected','false'));
+    t.setAttribute('aria-selected','true');
+    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+    document.getElementById('panel-'+t.dataset.tab).classList.add('active');
+  });
+});
+
+// ---------- distribution bar helper ----------
+function distChart(elId, rows){
+  const max = Math.max(1, ...rows.map(r=>r.value));
+  const total = rows.reduce((a,r)=>a+r.value,0) || 1;
+  document.getElementById(elId).innerHTML = rows.map(r=>`
+    <div class="hbar-row">
+      <span class="hbar-label">${r.label}</span>
+      <span class="hbar-track"><span class="hbar-fill" style="width:${r.value/max*100}%;background:${r.color}"></span></span>
+      <span class="hbar-value">${fmt(r.value)} (${fmt1(r.value/total*100)}%)</span>
+    </div>`).join('');
+}
+
+// ---------- class card helper (ABC / XYZ / FSN / VED summary tiles) ----------
+function classCard(name, badge, skus, extraRows, color, pctOfBase){
+  return `
+  <div class="class-card">
+    <div class="chead"><span class="cname">${name}</span><span class="cbadge" style="background:${color}">${badge}</span></div>
+    <div class="crow"><span>SKUs</span><b>${fmt(skus)}</b></div>
+    ${extraRows}
+    <div class="bar-track"><div class="bar-fill" style="width:${pctOfBase}%;background:${color}"></div></div>
+  </div>`;
+}
+
+// ---------- pareto chart ----------
+function renderPareto(rows){
+  const W=900,H=260,padL=10,padR=10,padT=14,padB=34;
+  const innerW=W-padL-padR, innerH=H-padT-padB;
+  const n = rows.length;
+  const svg = document.getElementById('pareto-chart');
+  const tooltip = document.getElementById('pareto-tooltip');
+  if(n===0){ svg.innerHTML=''; tooltip.style.opacity=0; return; }
+  const bw = innerW/n*0.62;
+  const step = innerW/n;
+  const vmax = Math.max(...rows.map(r=>r.vol));
+  function xAt(i){ return padL + i*step + step/2; }
+  function yBar(v){ return padT + innerH - (v/vmax)*innerH; }
+  function yLine(p){ return padT + innerH - (Math.min(p,100)/100)*innerH; }
+
+  let gridHTML='';
+  for(let g=0; g<=4; g++){
+    const gy = padT + innerH*g/4;
+    gridHTML += `<line class="grid-line" x1="${padL}" y1="${gy}" x2="${W-padR}" y2="${gy}"/>`;
+  }
+  let bars='';
+  rows.forEach((r,i)=>{
+    const x = xAt(i)-bw/2, y = yBar(r.vol), h = padT+innerH-y;
+    bars += `<rect class="pareto-bar" x="${x}" y="${y}" width="${bw}" height="${h}" rx="2"></rect>`;
+  });
+  const linePts = rows.map((r,i)=>xAt(i)+','+yLine(r.pct)).join(' ');
+  const dots = rows.map((r,i)=>`<circle class="pareto-dot" cx="${xAt(i)}" cy="${yLine(r.pct)}" r="3.2"></circle>`).join('');
+  let labels='';
+  rows.forEach((r,i)=>{
+    if(i%2===0) labels += `<text class="axis-label" x="${xAt(i)}" y="${H-14}" text-anchor="middle">${i+1}</text>`;
+  });
+
+  svg.setAttribute('viewBox','0 0 '+W+' '+H);
+  svg.innerHTML = gridHTML + bars + `<polyline class="pareto-line" points="${linePts}"/>` + dots + labels;
+
+  const wrap = svg.parentElement;
+  svg.onmousemove = (e)=>{
+    const rect = svg.getBoundingClientRect();
+    const relX = (e.clientX-rect.left)/rect.width*W;
+    let i = Math.floor((relX-padL)/step);
+    i = Math.max(0, Math.min(n-1, i));
+    const r = rows[i];
+    const wrapRect = wrap.getBoundingClientRect();
+    tooltip.style.left = (xAt(i)/W)*wrapRect.width+'px';
+    tooltip.style.top = (yBar(r.vol)/H)*wrapRect.height+'px';
+    tooltip.innerHTML = `<b>${i+1}. ${r.produto}</b><br>Vol. saídas: ${fmt(r.vol)} · Acum: ${fmt1(r.pct)}%`;
+    tooltip.style.opacity = 1;
+  };
+  svg.onmouseleave = ()=>{ tooltip.style.opacity = 0; };
+}
+
+// ---------- main render, driven by the active filter set ----------
+function applyFilters(){
+  const q = document.getElementById('f-busca').value.trim().toLowerCase();
+  const abc = document.getElementById('f-abc').value;
+  const xyz = document.getElementById('f-xyz').value;
+  const fsn = document.getElementById('f-fsn').value;
+  const anyFilter = !!(q || abc || xyz || fsn);
+
+  const rows = DATA.final.filter(r=>{
+    if(q && !r[0].toLowerCase().includes(q)) return false;
+    if(abc && r[10]!==abc) return false;
+    if(xyz && r[11]!==xyz) return false;
+    if(fsn && r[12]!==fsn) return false;
+    return true;
+  });
+
+  document.getElementById('filter-status').textContent = anyFilter
+    ? rows.length+' de '+TOTAL_SKUS+' SKUs correspondem ao filtro'
+    : 'Sem filtro ('+TOTAL_SKUS+' SKUs)';
+
+  renderAll(rows, anyFilter);
+}
+
+function renderAll(rows, anyFilter){
+  const n = rows.length;
+  const totalVol = rows.reduce((a,r)=>a+r[1],0);
+  const sortedByVol = [...rows].sort((a,b)=>b[1]-a[1]);
+
+  // ===== Visão Geral =====
+  const abcCount = {A:0,B:0,C:0}, xyzCount = {X:0,Y:0,Z:0}, fsnCount = {F:0,S:0,N:0};
+  rows.forEach(r=>{ abcCount[r[10]]++; xyzCount[r[11]]++; fsnCount[r[12]]++; });
+
+  document.querySelectorAll('#top-kpis .stat-card')[0].querySelector('.value').textContent = fmt(abcCount.A);
+  document.querySelectorAll('#top-kpis .stat-card')[1].querySelector('.value').textContent = fmt(abcCount.B);
+  document.querySelectorAll('#top-kpis .stat-card')[2].querySelector('.value').textContent = fmt(xyzCount.X);
+  document.querySelectorAll('#top-kpis .stat-card')[3].querySelector('.value').textContent = fmt(xyzCount.Z);
+  document.querySelectorAll('#top-kpis .stat-card')[4].querySelector('.value').textContent = fmt(fsnCount.F);
+  document.getElementById('visao-pill').textContent = n+' SKUs '+(anyFilter?'no filtro':'analisados');
+
+  const classDefs = [
+    {k:'A', color:'var(--a-color)'}, {k:'B', color:'var(--b-color)'}, {k:'C', color:'var(--c-color)'}
+  ];
+  document.getElementById('class-cards').innerHTML = classDefs.map(c=>{
+    const crows = rows.filter(r=>r[10]===c.k);
+    const vol = crows.reduce((a,r)=>a+r[1],0);
+    const ent = crows.reduce((a,r)=>a+r[3],0);
+    const giroVals = crows.map(r=>r[5]).filter(g=>g>0);
+    const giroMed = giroVals.length ? giroVals.reduce((a,b)=>a+b,0)/giroVals.length : 0;
+    const pct = totalVol>0 ? vol/totalVol*100 : 0;
+    return classCard('Classe '+c.k, c.k, crows.length, `
+      <div class="crow"><span>Vol. Saídas</span><b>${fmt(vol)}</b></div>
+      <div class="crow"><span>% do Volume</span><b>${fmt1(pct)}%</b></div>
+      <div class="crow"><span>Vol. Entradas</span><b>${fmt(ent)}</b></div>
+      <div class="crow"><span>Giro Médio</span><b>${fmt1(giroMed)}</b></div>
+    `, c.color, pct);
+  }).join('');
+
+  const xyzRows = [
+    {label:'X — Estável', value:xyzCount.X, color:'var(--good)'},
+    {label:'Y — Intermed.', value:xyzCount.Y, color:'var(--warn)'},
+    {label:'Z — Irregular', value:xyzCount.Z, color:'var(--crit)'}
+  ];
+  const fsnRows = [
+    {label:'F — Rápido', value:fsnCount.F, color:'var(--good)'},
+    {label:'S — Lento', value:fsnCount.S, color:'var(--warn)'},
+    {label:'N — Parado', value:fsnCount.N, color:'var(--crit)'}
+  ];
+  distChart('xyz-dist', xyzRows);
+  distChart('fsn-dist', fsnRows);
+  distChart('fsn-dist-2', fsnRows);
+
+  document.getElementById('top10-body').innerHTML = sortedByVol.slice(0,10).map((r,i)=>`
+    <tr>
+      <td class="num">${i+1}</td>
+      <td class="num">${codigo(r[0])}</td>
+      <td class="prod">${nomeCurto(r[0])}</td>
+      <td class="num">${fmt(r[1])}</td>
+      <td class="num">${fmt1(r[5])}</td>
+      <td>${tagHTML(r[10])}</td>
+      <td>${tagHTML(r[11])}</td>
+      <td>${tagHTML(r[12])}</td>
+      <td class="num">${r[14]}</td>
+    </tr>`).join('') || '<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:20px;">Nenhum SKU corresponde ao filtro.</td></tr>';
+
+  // ===== Curva ABC =====
+  let cum = 0;
+  const paretoRows = sortedByVol.map(r=>{
+    cum += r[1];
+    return {produto:r[0], vol:r[1], pct: totalVol>0 ? cum/totalVol*100 : 0, abc:r[10]};
+  });
+  document.getElementById('abc-pill').textContent = n+' SKUs '+(anyFilter?'no filtro':'analisados');
+  renderPareto(paretoRows.slice(0,20));
+  document.getElementById('abc-body').innerHTML = paretoRows.slice(0,20).map((r,i)=>`
+    <tr><td class="num">${i+1}</td><td class="prod">${r.produto}</td><td class="num">${fmt(r.vol)}</td><td class="num">${fmt1(r.pct)}%</td><td>${tagHTML(r.abc)}</td></tr>
+  `).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px;">Nenhum SKU corresponde ao filtro.</td></tr>';
+
+  // ===== Curva XYZ =====
+  document.getElementById('xyz-pill').textContent = n+' SKUs '+(anyFilter?'no filtro':'analisados');
+  document.getElementById('xyz-cards').innerHTML = [
+    {k:'X', label:'X — Estável', value:xyzCount.X, color:'var(--good)'},
+    {k:'Y', label:'Y — Intermediária', value:xyzCount.Y, color:'var(--warn)'},
+    {k:'Z', label:'Z — Irregular', value:xyzCount.Z, color:'var(--crit)'}
+  ].map(c=> classCard(c.label, c.k, c.value, `
+      <div class="crow"><span>% do filtro</span><b>${fmt1(n>0? c.value/n*100:0)}%</b></div>
+    `, c.color, n>0? c.value/n*100:0)).join('');
+
+  const xTop = rows.filter(r=>r[11]==='X').sort((a,b)=>b[1]-a[1]).slice(0,15);
+  document.getElementById('xyz-x-body').innerHTML = xTop.map(r=>`
+    <tr><td class="prod">${r[0]}</td><td class="num">${fmt1(r[6])}</td><td>${tagHTML(r[11])}</td></tr>
+  `).join('') || '<tr><td colspan="3" style="text-align:center;color:var(--muted);padding:16px;">Nenhum SKU corresponde ao filtro.</td></tr>';
+
+  const zTop = [...rows].sort((a,b)=>b[8]-a[8]).slice(0,15);
+  document.getElementById('xyz-z-body').innerHTML = zTop.map(r=>`
+    <tr><td class="prod">${r[0]}</td><td class="num">${fmt1(r[8])}</td><td>${tagHTML(r[11])}</td></tr>
+  `).join('') || '<tr><td colspan="3" style="text-align:center;color:var(--muted);padding:16px;">Nenhum SKU corresponde ao filtro.</td></tr>';
+
+  // ===== Curva FSN =====
+  document.getElementById('fsn-pill').textContent = n+' SKUs '+(anyFilter?'no filtro':'analisados');
+  const fTop = [...rows].sort((a,b)=>b[2]-a[2]).slice(0,15);
+  document.getElementById('fsn-body').innerHTML = fTop.map(r=>`
+    <tr><td class="prod">${r[0]}</td><td class="num">${fmt(r[2])}</td><td>${tagHTML(r[12])}</td></tr>
+  `).join('') || '<tr><td colspan="3" style="text-align:center;color:var(--muted);padding:16px;">Nenhum SKU corresponde ao filtro.</td></tr>';
+
+  // ===== Curva VED =====
+  document.getElementById('ved-cards').innerHTML = [
+    {k:'V', label:'V — Vital', color:'var(--a-color)'},
+    {k:'E', label:'E — Essencial', color:'var(--b-color)'},
+    {k:'D', label:'D — Desejável', color:'var(--c-color)'}
+  ].map(c=>{
+    const cnt = rows.filter(r=>r[13]===c.k).length;
+    const pct = n>0 ? cnt/n*100 : 0;
+    return classCard(c.label, c.k, cnt, `<div class="crow"><span>% do filtro</span><b>${fmt1(pct)}%</b></div>`, c.color, pct);
+  }).join('');
+  const vTop = rows.filter(r=>r[13]==='V').sort((a,b)=>b[1]-a[1]).slice(0,15);
+  document.getElementById('ved-body').innerHTML = vTop.map(r=>`
+    <tr><td class="prod">${r[0]}</td><td class="num">${fmt(r[1])}</td><td class="num">${fmt1(r[5])}</td><td>${tagHTML(r[13])}</td></tr>
+  `).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:16px;">Nenhum SKU corresponde ao filtro.</td></tr>';
+
+  // ===== Classificação Final =====
+  const comboCount = {};
+  rows.forEach(r=>{ comboCount[r[14]] = (comboCount[r[14]]||0)+1; });
+  const comboSorted = Object.entries(comboCount).sort((a,b)=>b[1]-a[1]);
+  document.getElementById('combo-grid').innerHTML = comboSorted.slice(0,12).map(([combo,count])=>`
+    <div class="combo-card">
+      <div class="ccode">${combo}</div>
+      <div class="ccount">${count}</div>
+      <div class="cpct">${fmt1(n>0? count/n*100:0)}% do filtro</div>
+    </div>`).join('') || '<p style="color:var(--muted);font-size:13px;">Nenhum SKU corresponde ao filtro.</p>';
+
+  const rowsToShow = sortedByVol.slice(0,300);
+  document.getElementById('final-body').innerHTML = rowsToShow.map(r=>`
+    <tr>
+      <td class="prod">${r[0]}</td>
+      <td class="num">${fmt(r[1])}</td>
+      <td class="num">${fmt1(r[5])}</td>
+      <td class="num">${fmt1(r[8])}</td>
+      <td>${tagHTML(r[10])}</td>
+      <td>${tagHTML(r[11])}</td>
+      <td>${tagHTML(r[12])}</td>
+      <td>${tagHTML(r[13])}</td>
+      <td class="num">${r[14]}</td>
+    </tr>`).join('') || '<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:20px;">Nenhum SKU corresponde ao filtro.</td></tr>';
+
+  document.getElementById('final-result-count').textContent = n+' de '+TOTAL_SKUS+' SKUs'+(n>300 ? ' (exibindo 300 primeiros por volume)' : '');
+  document.getElementById('final-count-pill').textContent = n+' SKUs';
+}
+
+['f-busca'].forEach(id=>document.getElementById(id).addEventListener('input', applyFilters));
+['f-abc','f-xyz','f-fsn'].forEach(id=>document.getElementById(id).addEventListener('change', applyFilters));
+document.getElementById('btn-clear').addEventListener('click', ()=>{
+  document.getElementById('f-busca').value='';
+  document.getElementById('f-abc').value='';
+  document.getElementById('f-xyz').value='';
+  document.getElementById('f-fsn').value='';
+  applyFilters();
+});
+
+applyFilters();
+</script>

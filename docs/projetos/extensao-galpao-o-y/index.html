@@ -1,0 +1,390 @@
+<title>Extensão do Galpão O–Y</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+:root{
+  --bg:#EDF1F4;
+  --surface:#FFFFFF;
+  --ink:#101B24;
+  --ink-soft:#4C5B68;
+  --ink-mute:#7C8A96;
+  --line:#CCD6DC;
+  --line-strong:#AEBBC3;
+  --current:#1873A0;
+  --current-r:#145F84; --current-f:#0F4A66;
+  --accent:#C1720E;
+  --accent-r:#9C5B0B; --accent-f:#784609;
+  --critical:#B0392A;
+  --critical-r:#8E2E22; --critical-f:#6E241A;
+  --critical-fill:#F8DFDA;
+  --floor:#E4EAEE; --floor-r:#D3DBE1; --floor-f:#C2CCD4;
+  --floor-ext:#F3E4CC; --floor-ext-r:#E6D3B2; --floor-ext-f:#D8C29A;
+  --shadow: 0 1px 2px rgba(16,27,36,.06), 0 6px 20px -8px rgba(16,27,36,.12);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0D1318;
+    --surface:#151E25;
+    --ink:#E8EEF2;
+    --ink-soft:#A9B8C2;
+    --ink-mute:#78899E;
+    --line:#26333C;
+    --line-strong:#344452;
+    --current:#3E8FC4;
+    --current-r:#2F6E99; --current-f:#23526F;
+    --accent:#C17F2A;
+    --accent-r:#996520; --accent-f:#734B18;
+    --critical:#D9695A;
+    --critical-r:#AD5348; --critical-f:#83403A;
+    --critical-fill:#3A1D1A;
+    --floor:#212B33; --floor-r:#1A222A; --floor-f:#141B21;
+    --floor-ext:#332A1C; --floor-ext-r:#2A2216; --floor-ext-f:#201A11;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px -10px rgba(0,0,0,.5);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0D1318;
+  --surface:#151E25;
+  --ink:#E8EEF2;
+  --ink-soft:#A9B8C2;
+  --ink-mute:#78899E;
+  --line:#26333C;
+  --line-strong:#344452;
+  --current:#3E8FC4;
+  --current-r:#2F6E99; --current-f:#23526F;
+  --accent:#C17F2A;
+  --accent-r:#996520; --accent-f:#734B18;
+  --critical:#D9695A;
+  --critical-r:#AD5348; --critical-f:#83403A;
+  --critical-fill:#3A1D1A;
+  --floor:#212B33; --floor-r:#1A222A; --floor-f:#141B21;
+  --floor-ext:#332A1C; --floor-ext-r:#2A2216; --floor-ext-f:#201A11;
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px -10px rgba(0,0,0,.5);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:"IBM Plex Sans",system-ui,-apple-system,sans-serif;
+  padding-inline:20px;
+  padding-block:40px 64px;
+}
+.wrap{max-width:980px;margin-inline:auto;display:flex;flex-direction:column;gap:36px}
+.mono{font-family:"IBM Plex Mono","SFMono-Regular",Menlo,monospace;font-variant-numeric:tabular-nums}
+
+header{display:flex;flex-direction:column;gap:8px}
+.eyebrow{
+  font-family:"Big Shoulders Display",sans-serif;
+  font-weight:700; font-size:13px; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--accent);
+}
+h1{
+  font-family:"Big Shoulders Display",sans-serif;
+  font-weight:800; font-size:clamp(30px,5.5vw,46px); line-height:.98;
+  margin:0; text-wrap:balance; letter-spacing:-.01em;
+}
+.subhead{font-size:15px;color:var(--ink-soft);max-width:64ch;line-height:1.5;margin:0}
+
+section{display:flex;flex-direction:column;gap:12px}
+.sec-head{display:flex;flex-direction:column;gap:4px}
+.sec-num{font-family:"IBM Plex Mono";font-size:12px;color:var(--ink-mute)}
+h2{
+  font-family:"Big Shoulders Display",sans-serif;
+  font-weight:700; font-size:23px; margin:0; letter-spacing:-.01em;
+}
+h3{
+  font-family:"Big Shoulders Display",sans-serif;
+  font-weight:700; font-size:15px; margin:0; letter-spacing:.02em;
+  text-transform:uppercase; color:var(--ink-soft);
+}
+.sec-note{font-size:13.5px;color:var(--ink-soft);max-width:68ch;line-height:1.55;margin:0}
+
+.panel{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:10px;
+  box-shadow:var(--shadow);
+  padding:22px;
+}
+.scrollbox{overflow-x:auto}
+
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--ink-soft)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.swatch{width:10px;height:10px;border-radius:2px;display:inline-block}
+
+#tooltip{
+  position:fixed; pointer-events:none;
+  background:var(--ink); color:var(--bg);
+  font-family:"IBM Plex Mono"; font-size:12px;
+  padding:6px 9px; border-radius:6px; line-height:1.4;
+  opacity:0; transform:translate(-50%,-100%); transition:opacity .1s;
+  z-index:50; white-space:nowrap; box-shadow:var(--shadow);
+}
+#tooltip.show{opacity:1}
+
+table{border-collapse:collapse;width:100%;min-width:380px;font-size:13px}
+th{
+  text-align:right;
+  font-family:"Big Shoulders Display"; font-weight:700; font-size:11.5px;
+  letter-spacing:.06em; text-transform:uppercase; color:var(--ink-mute);
+  padding:0 10px 8px; border-bottom:1px solid var(--line-strong);
+}
+th:first-child,td:first-child{text-align:left}
+td{padding:6px 10px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums}
+tr:last-child td{border-bottom:none}
+td.name{font-family:"IBM Plex Mono";font-weight:500;color:var(--ink)}
+td.note{text-align:left;font-size:12px;color:var(--ink-mute)}
+tr.hi td{background:var(--critical-fill)}
+tr.total td{border-top:2px solid var(--line-strong);font-weight:700;color:var(--ink)}
+tr.total td.name{font-family:"Big Shoulders Display";letter-spacing:.02em}
+.dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--critical);margin-right:5px}
+
+.gridwrap{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media (max-width:700px){ .gridwrap{grid-template-columns:1fr} }
+
+.totais{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media (max-width:640px){ .totais{grid-template-columns:1fr} }
+.tot-card{
+  background:var(--surface); border:1px solid var(--line); border-radius:10px;
+  padding:16px 18px; box-shadow:var(--shadow);
+}
+.tot-card.final{border-color:var(--accent)}
+.tot-label{
+  font-family:"Big Shoulders Display"; font-weight:700; font-size:12px;
+  letter-spacing:.08em; text-transform:uppercase; color:var(--ink-mute);
+}
+.tot-card.final .tot-label{color:var(--accent)}
+.tot-figs{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;margin-top:6px}
+.tot-fig{font-family:"Big Shoulders Display";font-weight:800;font-size:22px;font-variant-numeric:tabular-nums}
+.tot-fig .u{font-family:"IBM Plex Sans";font-weight:500;font-size:11px;color:var(--ink-mute);margin-left:2px}
+</style>
+
+<div class="wrap">
+
+  <!-- ================= MAQUETE (ISO) ================= -->
+  <section>
+    <div class="panel scrollbox">
+      <svg id="maquete" viewBox="0 0 1180 250" width="1180" height="250" role="img" aria-label="Maquete do galpão: 19 corredores atuais e as 17 ruas da extensão, cada pilar colorido por vagas operantes e inoperantes"></svg>
+    </div>
+    <div class="legend">
+      <span><i class="swatch" style="background:var(--current)"></i>operante</span>
+      <span><i class="swatch" style="background:var(--critical)"></i>inoperante</span>
+      <span><i class="swatch" style="background:var(--floor);border:1px solid var(--line-strong)"></i>piso atual</span>
+      <span><i class="swatch" style="background:var(--floor-ext);border:1px dashed var(--accent)"></i>piso da extensão (proposto)</span>
+    </div>
+  </section>
+
+  <!-- ================= LISTA DE DADOS ================= -->
+  <section>
+    <div class="gridwrap">
+      <div class="panel scrollbox">
+        <h3>Hoje — 19 corredores</h3>
+        <table style="margin-top:10px">
+          <thead>
+            <tr><th>Corredor</th><th>Capacidade</th><th>Inoperante</th><th>Operante</th></tr>
+          </thead>
+          <tbody id="cur-rows"></tbody>
+        </table>
+      </div>
+
+      <div class="panel scrollbox">
+        <h3>Extensão — 17 ruas (O–Y)</h3>
+        <table style="margin-top:10px">
+          <thead>
+            <tr><th>Rua</th><th>Lados</th><th>Perda</th><th class="note">Nota</th></tr>
+          </thead>
+          <tbody id="ext-rows"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<div id="tooltip"></div>
+
+<script>
+(function(){
+  const css = getComputedStyle(document.documentElement);
+  const cssVar = (name) => css.getPropertyValue(name).trim();
+
+  const tip = document.getElementById('tooltip');
+  function showTip(evt, html){ tip.innerHTML = html; tip.classList.add('show'); moveTip(evt); }
+  function moveTip(evt){ tip.style.left = evt.clientX + 'px'; tip.style.top = (evt.clientY - 10) + 'px'; }
+  function hideTip(){ tip.classList.remove('show'); }
+
+  const NS = 'http://www.w3.org/2000/svg';
+  function el(tag, attrs){
+    const e = document.createElementNS(NS, tag);
+    for(const k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+
+  // -- current warehouse: 19 real corridors [corredor, bruta, inoperante, operante] --
+  const cur = [
+    ['A',528,96,432],['B',528,111,417],['C',528,96,432],['D',528,96,432],['E',528,96,432],
+    ['F',528,111,417],['G',528,96,432],['H',528,96,432],['I',528,12,516],['J',528,30,498],
+    ['K',528,12,516],['L',528,12,516],['M',528,12,516],['N',528,30,498],['O',528,12,516],
+    ['P',528,30,498],['Q',264,6,258],['R',720,4,716],['Z',528,96,432],
+  ];
+  // -- extension: 17 ruas -- estrutura real (lados, perda por túnel/coluna).
+  // Regra de perda (confirmada com o usuário em 2026-09):
+  //   1) Corredor com coluna (N,K,G,C) perde 6 vagas fixas — motivo "coluna".
+  //   2) TODA rua da extensão perde 6 vagas fixas — motivo "túnel" (flat, não
+  //      multiplicado por lado — o túnel atravessa a extensão inteira, não só
+  //      as ruas de borda O/Y). As duas perdas são cumulativas quando ambas
+  //      se aplicam à mesma rua.
+  // Nenhum total é hardcoded abaixo — 5.184 brutas / perda / operantes saem
+  // sempre de `ext`, para nunca divergir se essa regra mudar de novo.
+  const singleSided = new Set(['O','Y']);
+  const columnAisles = new Set(['N','K','G','C']);
+  const extOrder = ['O','N','M','L','K','J','I','H','G','F','E','D','C','B','A','Z','Y'];
+  const ext = extOrder.map(letter=>{
+    const sides = singleSided.has(letter) ? 1 : 2;
+    const perdaColuna = columnAisles.has(letter) ? 6 : 0;
+    const perdaTunel = 6;
+    const perda = perdaColuna + perdaTunel;
+    const notaParts = [];
+    if (perdaColuna) notaParts.push('coluna');
+    notaParts.push('túnel');
+    return [letter, sides, perda, notaParts.join(' + ')];
+  });
+  const VAGAS_POR_LADO = 162;
+  const extBrutas = ext.reduce((s,[,sides])=>s+sides*VAGAS_POR_LADO, 0);
+  const extPerdaTotal = ext.reduce((s,[,,perda])=>s+perda, 0);
+  const extOperanteTotal = extBrutas - extPerdaTotal;
+
+  // ---------------- MAQUETE (fake-3D scale model, fixed depth-skew per bar) ----------------
+  (function(){
+    const svg = document.getElementById('maquete');
+    const BASE_Y = 210, K = 0.115;
+    const DX = 7, DY = -4;
+    const W = 15, GAP = 8;
+
+    function pt(x,y){ return x+','+y; }
+    function quad(p1,p2,p3,p4, fill, extra){
+      const g = Object.assign({points:[p1,p2,p3,p4].map(p=>pt(p[0],p[1])).join(' '), fill}, extra||{});
+      svg.appendChild(el('polygon', g));
+      return svg.lastChild;
+    }
+    function segment(ax, ay, w, h, top, right, front, dashed, tipHtml){
+      const extra = dashed ? {stroke: cssVar('--accent'), 'stroke-dasharray':'3 2', 'stroke-width':1} : {};
+      const bl=[ax,ay], br=[ax+w,ay], tl=[ax,ay-h], tr=[ax+w,ay-h];
+      const blD=[ax+DX,ay+DY], brD=[ax+w+DX,ay+DY], tlD=[ax+DX,ay-h+DY], trD=[ax+w+DX,ay-h+DY];
+      const faces = [
+        quad(tl,tr,trD,tlD, top, extra),
+        quad(br,brD,trD,tr, right, extra),
+        quad(bl,br,tr,tl, front, extra),
+      ];
+      if (tipHtml) faces.forEach(f=>{
+        f.addEventListener('mouseenter',(e)=>showTip(e,tipHtml));
+        f.addEventListener('mousemove', moveTip);
+        f.addEventListener('mouseleave', hideTip);
+      });
+      return faces;
+    }
+    function slab(ax, ay, w, th, top, right, front, dashed){
+      segment(ax, ay+th, w, th, top, right, front, dashed);
+    }
+
+    const curX0 = 110, extGap = 46;
+    const curW = cur.length*(W+GAP), extW = ext.length*(W+GAP);
+    const extX0 = curX0 + curW + extGap;
+
+    slab(curX0-14, BASE_Y, curW+8, 7, cssVar('--floor'), cssVar('--floor-r'), cssVar('--floor-f'));
+    slab(extX0-14, BASE_Y, extW+8, 7, cssVar('--floor-ext'), cssVar('--floor-ext-r'), cssVar('--floor-ext-f'), true);
+
+    const tgx = curX0+curW + extGap/2;
+    svg.appendChild(el('line',{x1:tgx,y1:BASE_Y-2,x2:tgx+DX*1.4,y2:BASE_Y+DY*1.4-2,stroke:cssVar('--line-strong'),'stroke-width':1,'stroke-dasharray':'2 2'}));
+    const tgt = el('text',{x:tgx+3,y:BASE_Y+18,'text-anchor':'middle','font-size':9.5,'font-family':'IBM Plex Mono','font-weight':600,fill:cssVar('--ink-mute')});
+    tgt.textContent = 'TÚNEL';
+    svg.appendChild(tgt);
+
+    const rulerX = curX0-32;
+    [0,200,400,600].forEach(v=>{
+      const y = BASE_Y - v*K;
+      svg.appendChild(el('line',{x1:rulerX,y1:y,x2:rulerX+10,y2:y,stroke:cssVar('--line-strong'),'stroke-width':1}));
+      const t = el('text',{x:rulerX-5,y:y+3,'text-anchor':'end','font-size':9,'font-family':'IBM Plex Mono',fill:cssVar('--ink-mute')});
+      t.textContent = v.toLocaleString('pt-BR');
+      svg.appendChild(t);
+    });
+    svg.appendChild(el('line',{x1:rulerX,y1:BASE_Y,x2:rulerX,y2:BASE_Y-600*K,stroke:cssVar('--line-strong'),'stroke-width':1}));
+
+    function drawPillars(list, x0, dashed, kind){
+      list.forEach(([cor,cap,inop,op], i)=>{
+        const ax = x0 + i*(W+GAP);
+        const opH = op*K, inopH = Math.max(inop*K, inop>0?4:0);
+        const tip = `<b>${kind} ${cor}</b><br>${cap.toLocaleString('pt-BR')} bruta · ${inop.toLocaleString('pt-BR')} inoperante · ${op.toLocaleString('pt-BR')} operante`;
+        segment(ax, BASE_Y, W, opH, cssVar('--current'), cssVar('--current-r'), cssVar('--current-f'), false, tip);
+        if (inop>0) segment(ax, BASE_Y-opH, W, inopH, cssVar('--critical'), cssVar('--critical-r'), cssVar('--critical-f'), false, tip);
+
+        const lbl = el('text',{x:ax+W/2,y:BASE_Y+16,'text-anchor':'middle','font-size':10.5,'font-family':'Big Shoulders Display','font-weight':700,fill:cssVar('--ink')});
+        lbl.textContent = cor;
+        svg.appendChild(lbl);
+
+        const vlbl = el('text',{x:ax+W/2+DX/2,y:BASE_Y-opH-inopH+DY/2-6,'text-anchor':'middle','font-size':9,'font-family':'IBM Plex Mono','font-weight':600,fill:cssVar('--ink-soft')});
+        vlbl.textContent = cap.toLocaleString('pt-BR');
+        svg.appendChild(vlbl);
+      });
+    }
+    // extension pillars use the 162-vagas/lado average; ver extBrutas/extOperanteTotal (única fonte, calculados acima)
+    const extPillars = ext.map(([letter,sides,perda])=>[letter, sides*VAGAS_POR_LADO, perda, sides*VAGAS_POR_LADO-perda]);
+    drawPillars(cur, curX0, false, 'Corredor');
+    drawPillars(extPillars, extX0, true, 'Rua');
+
+    const capLbl1 = el('text',{x:curX0+curW/2,y:24,'text-anchor':'middle','font-size':11,'font-family':'Big Shoulders Display','font-weight':700,'letter-spacing':'.04em',fill:cssVar('--ink-mute')});
+    capLbl1.textContent = 'GALPÃO DE HOJE — 8.906 OPERANTES';
+    svg.appendChild(capLbl1);
+    const capLbl2 = el('text',{x:extX0+extW/2,y:24,'text-anchor':'middle','font-size':11,'font-family':'Big Shoulders Display','font-weight':700,'letter-spacing':'.04em',fill:cssVar('--accent')});
+    capLbl2.textContent = `EXTENSÃO O–Y — +${extOperanteTotal.toLocaleString('pt-BR')} OPERANTES`;
+    svg.appendChild(capLbl2);
+  })();
+
+  // ---------------- LISTA: tabela "Hoje" ----------------
+  const columnAislesCur = new Set(['N','K','G','C']);
+  const curBody = document.getElementById('cur-rows');
+  cur.forEach(([cor,cap,inop,op])=>{
+    const tr = document.createElement('tr');
+    if (columnAislesCur.has(cor)) tr.className='hi';
+    tr.innerHTML = `
+      <td class="name">${cor}</td>
+      <td class="mono">${cap.toLocaleString('pt-BR')}</td>
+      <td class="mono">${inop.toLocaleString('pt-BR')}</td>
+      <td class="mono">${op.toLocaleString('pt-BR')}</td>`;
+    curBody.appendChild(tr);
+  });
+  const curTot = cur.reduce((a,[,cap,inop,op])=>({cap:a.cap+cap,inop:a.inop+inop,op:a.op+op}),{cap:0,inop:0,op:0});
+  const curTotTr = document.createElement('tr');
+  curTotTr.className = 'total';
+  curTotTr.innerHTML = `
+    <td class="name">Total</td>
+    <td class="mono">${curTot.cap.toLocaleString('pt-BR')}</td>
+    <td class="mono">${curTot.inop.toLocaleString('pt-BR')}</td>
+    <td class="mono">${curTot.op.toLocaleString('pt-BR')}</td>`;
+  curBody.appendChild(curTotTr);
+
+  // ---------------- LISTA: tabela "Extensão" ----------------
+  const extBody = document.getElementById('ext-rows');
+  ext.forEach(([letter,sides,perda,nota])=>{
+    const tr = document.createElement('tr');
+    if (perda>0) tr.className='hi';
+    tr.innerHTML = `
+      <td class="name">${letter}</td>
+      <td class="mono">${sides}</td>
+      <td class="mono">${perda>0 ? '−'+perda : '—'}</td>
+      <td class="note">${nota}</td>`;
+    extBody.appendChild(tr);
+  });
+  const extSidesTotal = ext.reduce((s,[,sides])=>s+sides, 0);
+  const extTotTr = document.createElement('tr');
+  extTotTr.className = 'total';
+  extTotTr.innerHTML = `
+    <td class="name">Total (${extBrutas.toLocaleString('pt-BR')} brutas)</td>
+    <td class="mono">${extSidesTotal}</td>
+    <td class="mono">−${extPerdaTotal.toLocaleString('pt-BR')}</td>
+    <td class="note">${extOperanteTotal.toLocaleString('pt-BR')} operantes</td>`;
+  extBody.appendChild(extTotTr);
+})();
+</script>

@@ -108,6 +108,30 @@ scripts/        gerador de dados fictícios
 docs/img/       prints
 ```
 
+## Outros projetos
+
+Além do sistema principal, este repositório reúne dashboards, mapas e análises que montei para a operação de armazém/CD. Cada um é um HTML autocontido (abre direto no navegador) em [`docs/projetos/`](docs/projetos), e a vitrine está em [`docs/index.html`](docs/index.html) (pronta para o GitHub Pages: *Settings → Pages → Branch `main` / pasta `/docs`*).
+
+| Projeto | Área | O que mostra | Tecnologias |
+|---|---|---|---|
+| [Controle Geral](docs/projetos/controle-geral/index.html) | Operação | Dashboard principal do CD: recebimento, armazenagem, expedição, devoluções, avarias, conferentes e movimentação, com filtros por período, turno e transportadora e três temas visuais. | HTML · JavaScript · cubo de dados dia × dimensão |
+| [Orbital Twin](docs/projetos/orbital-twin/index.html) | Gêmeo digital | Gêmeo digital 3D do galpão com ocupação por nível, fluxo de carretas, replay diário e um painel de alertas automáticos ("IA operacional") por regras auditáveis. | HTML · SVG/Canvas · JavaScript |
+| [Ritmo Operacional](docs/projetos/ritmo-operacional/index.html) | Produtividade | Evolução diária por conferente e atividade: expedição por canal, pedidos colocados e produtividade da equipe. | HTML · JavaScript |
+| [Mapa do Galpão](docs/projetos/mapa-do-galpao/index.html) | Layout e capacidade | Planta baixa interativa com Lado A, E-COM e Lado B, simulador de ocupação e capacidade antes e depois do projeto de extensão. | HTML · SVG · JavaScript |
+| [Projeto de Extensão do Galpão (A + B)](docs/projetos/projeto-extensao-galpao/index.html) | Layout e capacidade | Maquete isométrica da extensão dos Lados A e B: capacidade bruta, vagas inoperantes (colunas e túnel) e operantes por rua. | HTML · SVG · JavaScript |
+| [Extensão do Galpão O–Y](docs/projetos/extensao-galpao-o-y/index.html) | Layout e capacidade | Versão inicial da maquete: 19 corredores atuais e 17 ruas de extensão, com regra de perda por coluna e túnel. | HTML · SVG · JavaScript |
+| [Acuracidade do Inventário](docs/projetos/inventario-acuracidade/index.html) | Qualidade | Acuracidade do inventário por rua (corretos ÷ (sistema + entrada)), com semáforo de meta, rosca geral e tabela de divergências. | HTML · JavaScript |
+| [Consolidado do Inventário (1ª e 2ª contagem)](docs/projetos/inventario-consolidado/index.html) | Qualidade | Consolidado de contagem cega: posições a dar entrada e a limpar, por rua e conferente, com detecção de conflitos e reconferência. | HTML · JavaScript |
+| [Torre de Classificação de Estoque](docs/projetos/torre-classificacao-estoque/index.html) | Supply chain | Classificação ABC / XYZ / FSN / VED dos SKUs: volume, variabilidade, giro e criticidade, com filtros e combinações de classe. | HTML · JavaScript |
+| [Painel Gerencial · Julho](docs/projetos/painel-gerencial-julho/index.html) | Gestão | Painel mensal com visão geral, movimentação, operadores, devoluções (motivos, ofensor, plano de ação) e recebimento entre unidades. | HTML · Chart.js |
+| [Painel Gerencial · Junho](docs/projetos/painel-gerencial-junho/index.html) | Gestão | Mesmo painel no mês anterior, para comparação (variação líquida de estoque, devoluções e produtividade). | HTML · Chart.js |
+| [Falcon · Guia de Expedição](docs/projetos/falcon-guia-expedicao/index.html) | Documentação | Guia de operação da expedição em formato de manual técnico: do pedido à entrega, com gráficos, SKUs, atrasos e plano de ação. | HTML · CSS · JavaScript |
+| [Falcon / MotionG](docs/projetos/falcon-motiong/index.html) | Motion graphic | O resultado do mês contado como uma missão espacial, em 7 capítulos animados (Ignição, Trajetória, Pulso, Canais, Tripulação, Alcance, Retorno). | HTML · CSS · JavaScript · SVG · Web Animations API |
+| [Falcon · Resumo Mensal](docs/projetos/falcon-resumo-mensal/index.html) | Gestão | Resumo mensal exportável que alimenta o MotionG: indicadores do mês, canais, transportadoras, UFs e devoluções. | HTML · JavaScript |
+| [ORION · Centro de Comando Logístico](docs/projetos/orion-centro-de-comando/index.html) | Conceito visual | Protótipo de centro de comando com estética HUD: KPIs, docas, frota, gêmeo digital do fluxo e insights preditivos (dados simulados). | HTML · CSS · SVG · Canvas |
+
+> Nomes de pessoas, clientes, fornecedores, produtos e marcas desses projetos são fictícios.
+
 ## Licença
 
 MIT — veja [LICENSE](LICENSE).

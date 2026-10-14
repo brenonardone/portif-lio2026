@@ -1,0 +1,450 @@
+<title>Mapa do Galpão</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@600;700&display=swap">
+<style>
+/* Layout: planta baixa vista de cima — fundo no topo, docas embaixo; Lado A | E-COM | Lado B */
+:root{
+  /* Tema IM — mesmo da telemetria */
+  --bg:#F5F2F0; --surface:#FFFFFF; --ink:#221A16; --ink-soft:#6B5F58; --ink-mute:#A3978F;
+  --line:#E0DCD9; --line-strong:#C9C1BC;
+  --red:#E60000; --red-hi:#FF2D1F; --bordo:#7A1414; --bordo-deep:#4F0C0C;
+  --ok:#1B8A5A; --warn:#B7791F; --crit:#B91C1C; --neutral:#4A4A4A;
+  --rack:#7A1414; --rack-soft:#F3E6E4;      /* porta-palete atual: bordô */
+  --ext:#E60000; --ext-soft:#FDE8E6;        /* proposto: vermelho */
+  --col:#B7791F;                            /* coluna: mostarda */
+  --floor:#FBF9F8; --zone:#EFEAE7;
+  --grad-card:linear-gradient(135deg,#FF2D1F 0%,#E60000 35%,#A80D0D 70%,#7A1414 100%);
+  --grad-bar:linear-gradient(90deg,#FF2D1F,#E60000,#7A1414);
+  --shadow:0 1px 2px rgba(34,26,22,.05),0 8px 24px -12px rgba(34,26,22,.18);
+  --display:"Oswald","Arial Narrow",sans-serif;
+  --body:"Inter","Segoe UI",system-ui,sans-serif;
+  --mono:"JetBrains Mono",Consolas,ui-monospace,monospace;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);padding-inline:16px;padding-block:32px 56px}
+.wrap{max-width:1560px;margin-inline:auto;display:flex;flex-direction:column;gap:20px}
+.eyebrow{font-family:var(--mono);font-weight:700;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--red)}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(28px,5vw,42px);margin:4px 0 0;line-height:1.05;letter-spacing:.01em}
+.sub{color:var(--ink-soft);font-size:14.5px;line-height:1.5;max-width:70ch;margin:8px 0 0}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:18px;overflow-x:auto;box-shadow:var(--shadow)}
+svg{display:block;width:100%;height:auto;min-width:1100px}
+svg text{font-family:var(--mono)}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:12.5px;color:var(--ink-soft)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:12px;height:12px;border-radius:2px;display:inline-block}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line-strong);flex-wrap:wrap}
+.tab{font-family:var(--mono);font-weight:700;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;font-size:11px;background:none;border:none;border-bottom:3px solid transparent;color:var(--ink-mute);padding:10px 14px;margin-bottom:-1px;cursor:pointer}
+.tab[aria-selected="true"]{color:var(--red);border-bottom-color:var(--red)}
+.tab:hover{color:var(--ink)}
+.tab:focus-visible{outline:2px solid var(--rack);outline-offset:2px}
+.pane{display:flex;flex-direction:column;gap:20px}
+.pane[hidden]{display:none}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.kp{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:14px 16px;min-width:0;display:flex;flex-direction:column;gap:4px;box-shadow:var(--shadow)}
+.kp .lb{font-family:var(--mono);font-weight:700;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;font-size:10px;color:var(--ink-soft)}
+.kp .v{font-family:var(--display);font-weight:700;font-size:30px;line-height:1.05;font-variant-numeric:tabular-nums;color:var(--ink)}
+.kp .v small{font-family:var(--body);font-weight:500;font-size:13px;color:var(--ink-mute);margin-left:6px}
+.kp .s{font-family:var(--body);font-size:12px;color:var(--ink-soft)}
+.kp.final{background:var(--grad-card);border-color:transparent}
+.kp.final .lb,.kp.final .v,.kp.final .s{color:#FFFFFF}
+.kp.final .lb{opacity:.85}
+.kp.sim .v{color:var(--red)}
+.bar{height:8px;border-radius:4px;background:var(--zone);overflow:hidden;margin-top:6px}
+.bar i{display:block;height:100%;background:var(--bordo);border-radius:4px}
+.kp.sim .bar i,.occ .bar.ext i{background:var(--grad-bar)}
+.occ{display:flex;flex-direction:column;gap:14px;overflow:visible}
+.occ-head{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:end;justify-content:space-between}
+.occ-head h2{font-family:var(--mono);font-weight:700;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;font-size:11px;margin:0 0 10px;color:var(--ink-soft)}
+.inputs{display:flex;flex-wrap:wrap;gap:12px}
+.inputs label{display:flex;flex-direction:column;gap:6px;font-family:var(--mono);font-weight:700;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;font-size:10px;color:var(--ink-soft)}
+.inputs input{font-family:var(--body);font-weight:600;font-size:15px;width:150px;padding:7px 10px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink)}
+.orow{display:grid;grid-template-columns:150px 1fr 1fr;gap:8px 20px;align-items:center;padding-block:10px;border-top:1px solid var(--line)}
+.orow .nm{font-family:var(--body);font-weight:700;font-size:15px}
+.simtag{display:block;font-family:var(--mono);font-weight:500;font-size:10.5px;color:var(--ext)}
+.orow .cell{min-width:0}
+.orow .cell .t{display:flex;justify-content:space-between;gap:8px;font-family:var(--body);font-size:12.5px;color:var(--ink-soft)}
+.orow .cell .t b{font-family:var(--display);font-weight:700;font-size:18px;color:var(--ink)}
+.orow .cell.e .t b{color:var(--red)}
+.orow.hd{border-top:none;padding-block:0}
+.orow.hd span{font-family:var(--mono);font-weight:700;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;font-size:10px;color:var(--ink-mute)}
+@media (max-width:640px){.orow{grid-template-columns:1fr}.orow.hd{display:none}}
+.totais{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.tc{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;min-width:0}
+.tc.final{border-color:var(--ext);border-width:2px}
+.tc .lb{font-family:var(--display);font-weight:700;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-mute)}
+.tc.final .lb{color:var(--ext)}
+.tc .v{font-family:var(--display);font-weight:800;font-size:28px;font-variant-numeric:tabular-nums;margin-top:4px}
+.tc .v small{font-family:var(--body);font-weight:500;font-size:12px;color:var(--ink-mute);margin-left:4px}
+.tc .s{font-size:12.5px;color:var(--ink-soft);font-family:var(--mono);margin-top:2px}
+.tblsec{display:flex;flex-direction:column;gap:0}
+.tbl{padding:8px 12px}
+table{border-collapse:collapse;width:100%;min-width:720px;font-size:13px;font-variant-numeric:tabular-nums}
+th,td{font-family:var(--body)}
+th:first-child,td:first-child{text-align:left}
+thead th{font-family:var(--mono);font-weight:700;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;font-size:10px;color:var(--ink-mute)}
+thead tr.grp th{text-align:center;color:var(--ink-soft);border-bottom:1px solid var(--line-strong)}
+thead tr.grp th.ext{color:var(--red)}
+td{font-family:var(--mono)}
+td.rua{font-family:var(--body);font-weight:700;font-size:14px}
+td.sep,th.sep{border-left:1px solid var(--line-strong)}
+td.ext{color:var(--ext)}
+td.dim{color:var(--ink-mute)}
+td.tot{font-weight:600}
+td.col{color:var(--col)}
+tr.total td{border-top:2px solid var(--line-strong);border-bottom:none;font-weight:700}
+.nota{font-size:13px;color:var(--ink-soft);line-height:1.55;max-width:90ch;margin:0}
+h2{font-family:var(--display);font-weight:700;font-size:18px;letter-spacing:.03em;text-transform:uppercase;margin:0 0 8px;color:var(--ink-soft)}
+ol,ul{margin:0;padding-left:20px;font-size:14px;line-height:1.55;color:var(--ink)}
+li+li{margin-top:6px}
+.mono{font-family:var(--mono)}
+#tip{position:fixed;pointer-events:none;background:var(--ink);color:var(--bg);font-family:var(--mono);font-size:12px;padding:6px 9px;border-radius:6px;line-height:1.45;opacity:0;transform:translate(-50%,-110%);z-index:9;white-space:nowrap}
+#tip.on{opacity:1}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Aurora Suplementos · projeto de extensão</div>
+    <h1>Mapa do Galpão</h1>
+    <p class="sub">Vista de cima. As docas ficam embaixo e o fundo do galpão em cima. O vermelho tracejado é o que ainda vai ser montado: a extensão dos porta-paletes para o fundo nos Lados A e B, e as 6 linhas novas no E-COM. </p>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button class="tab" role="tab" id="tb-resumo" aria-selected="true" data-tab="resumo">Resumo</button>
+    <button class="tab" role="tab" id="tb-det" aria-selected="false" data-tab="det">Detalhamento</button>
+  </nav>
+
+  <div class="pane" id="pane-resumo" role="tabpanel">
+    <section class="kpis" id="kpis"></section>
+  <div class="panel"><svg id="mapa" role="img" aria-label="Planta do galpão com Lado A, E-COM e Lado B"></svg></div>
+
+  <div class="legend">
+    <span><i class="sw" style="background:var(--rack)"></i>porta-palete atual</span>
+    <span><i class="sw" style="background:var(--ext-soft);border:1.5px dashed var(--ext)"></i>porta-palete novo (proposto)</span>
+    <span><i class="sw" style="background:var(--col)"></i>coluna</span>
+    <span><b class="mono">P</b> / <b class="mono">I</b> = lado par / ímpar</span>
+  </div>
+    <section class="panel occ">
+      <div class="occ-head">
+        <h2>Ocupação por lado</h2>
+        <div class="inputs">
+          <label for="oc-A">Ocupadas hoje · Lado A <input id="oc-A" type="number" min="0" inputmode="numeric"></label>
+          <label for="oc-B">Ocupadas hoje · Lado B <input id="oc-B" type="number" min="0" inputmode="numeric" placeholder="informe"></label>
+        </div>
+      </div>
+      <div id="occ-rows"></div>
+    </section>
+  </div>
+
+  <div class="pane" id="pane-det" role="tabpanel" hidden>
+
+  <section class="tblsec">
+    <h2>Lado A · Expedição</h2>
+    <div class="panel tbl"><table id="tbl-A"></table></div>
+  </section>
+  <section class="tblsec">
+    <h2>E-COM</h2>
+    <div class="panel tbl"><table id="tbl-E"></table></div>
+  </section>
+  <section class="tblsec">
+    <h2>Lado B · Almoxarifado</h2>
+    <div class="panel tbl"><table id="tbl-B"></table></div>
+  </section>
+  <p class="nota">Inoperantes: vagas perdidas por coluna e pelo túnel. Na extensão do Lado A o túnel tira 6 vagas por rua; no Lado B, 6 por lado de rua. As colunas tiram 6 vagas por rua na extensão do A, 10 por rua no B e 12 nas linhas L1 e L5 do E-COM. Cada lado de rua da extensão tem 162 vagas. As linhas do E-COM têm 234 vagas por face (rua do Lado A sem 192 vagas da frente em cada face).</p>
+  </div>
+</div>
+<div id="tip"></div>
+
+<script>
+(function(){
+  const cs = getComputedStyle(document.documentElement);
+  const C = n => cs.getPropertyValue(n).trim();
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.getElementById('mapa');
+  const tip = document.getElementById('tip');
+  const fmt = n => n.toLocaleString('pt-BR');
+  function el(tag, a, parent){ const e=document.createElementNS(NS,tag); for(const k in a) e.setAttribute(k,a[k]); (parent||svg).appendChild(e); return e; }
+  function txt(x,y,s,a){ const t=el('text',Object.assign({x,y,'text-anchor':'middle','font-size':10,fill:C('--ink-soft')},a||{})); t.textContent=s; return t; }
+  function hover(node, html){
+    node.style.cursor='default';
+    node.addEventListener('mouseenter',e=>{tip.innerHTML=html;tip.classList.add('on');mv(e)});
+    node.addEventListener('mousemove',mv);
+    node.addEventListener('mouseleave',()=>tip.classList.remove('on'));
+  }
+  function mv(e){ tip.style.left=e.clientX+'px'; tip.style.top=(e.clientY-8)+'px'; }
+
+  // ---- dados (mesmos do projeto de extensão) ----
+  const curA = {A:[528,96],B:[528,111],C:[528,96],D:[528,96],E:[528,96],F:[528,111],G:[528,96],H:[528,96],I:[528,12],J:[528,30],
+    K:[528,12],L:[528,12],M:[528,12],N:[528,30],O:[528,12],P:[528,30],Q:[264,6],R:[720,4],Z:[528,96],Y:[216,0]};
+  const colA = new Set(['N','K','G','C']), colB = new Set(['D','H']);
+  const VL = 162;
+  const extA = {}; 'ONMLKJIHGFEDCBAZY'.split('').forEach(l=>{ const lados=['O','Y'].includes(l)?1:2; const p=6+(colA.has(l)?6:0); extA[l]={lados,cap:lados*VL,inop:p}; });
+  const curB = {M:[640,0],A:[220,6],J:[220,6]}; 'BCDEFGHI'.split('').forEach(l=>curB[l]=[440,12+(colB.has(l)?10:0)]);
+  const extB = {}; [['B',1],['C',2],['D',2],['E',2],['F',2],['G',2],['H',2],['I',2],['J',1]].forEach(([l,lados])=>{ const p=6*lados+(colB.has(l)?10:0); extB[l]={lados,cap:lados*VL,inop:p}; });
+  const tipCur = (nome,[cap,inop]) => `<b>${nome} · hoje</b><br>${fmt(cap)} brutas · ${fmt(inop)} inop. · ${fmt(cap-inop)} operantes`;
+  const tipExt = (nome,o) => `<b>${nome} · extensão</b><br>${o.lados} lado${o.lados>1?'s':''} · ${fmt(o.cap)} brutas · ${fmt(o.cap-o.inop)} operantes`;
+
+  // ---- geometria ----
+  const RK=8, AI=20;              // largura da estante e do corredor
+  const TOP=40, EXT0=64, EXT1=226, TUN0=226, TUN1=262, CUR0=262, CUR1A=520, CUR1B=420, WALL=600;
+  const CUR1 = CUR1A;
+  const X0=24;
+
+  // Lado A, da parede (esquerda) para o E-COM
+  // cada item: {k: letra, par:bool, imp:bool, ext:{par,imp}|null, tipo}
+  // L/R = tem estante à esquerda/direita do corredor. No Lado A o ímpar fica à esquerda e o par à direita.
+  // Lado A, da parede (esquerda) para o E-COM: R drive, Q, P … A, Z, Y (recebimento)
+  const ladoA = [{k:'R',tipo:'drive'},{k:'Q',L:false,R:true,ext:null}];
+  'PONMLKJIHGFEDCBAZ'.split('').forEach(k=>ladoA.push({k,L:true,R:true,ext:(k in extA)?(k==='O'?{L:false,R:true}:{L:true,R:true}):null}));
+  ladoA.push({k:'Y',L:true,R:false,ext:{L:true,R:false}});
+
+  // Lado B, do E-COM para a parede: J, I … B, A, Drive M. Par à esquerda, ímpar à direita.
+  // A estante entre J e I tem J ímpar de um lado e I par do outro; A só tem a face da estante entre B e A.
+  const W_M = 84;
+  const ladoB = [{k:'J',L:false,R:true,ext:{L:false,R:true}}];
+  'IHGFEDCB'.split('').forEach(k=>ladoB.push({k,L:true,R:true,ext:k==='B'?{L:true,R:false}:{L:true,R:true}}));
+  ladoB.push({k:'A',L:true,R:false,ext:null,fL:'I'});
+  ladoB.push({k:'M',tipo:'drive',w:W_M});
+
+  const W_RUA = RK+AI+RK, W_BLOCO = 44;
+  const wOf = it => it.w || (it.tipo ? W_BLOCO : W_RUA);
+  const wA = ladoA.reduce((s,i)=>s+wOf(i),0), wB = ladoB.reduce((s,i)=>s+wOf(i),0);
+  const GAPZ = 18, W_ECOM = 330;
+  const xA = X0+8, xE = xA+wA+GAPZ, xB = xE+W_ECOM+GAPZ;
+  const totalW = xB+wB+8+X0, totalH = 690;
+  svg.setAttribute('viewBox',`0 0 ${totalW} ${totalH}`);
+
+  // piso e paredes
+  el('rect',{x:X0,y:TOP-12,width:totalW-2*X0,height:WALL-TOP+12,fill:C('--floor'),stroke:C('--line-strong'),'stroke-width':2.5});
+  txt(totalW/2,TOP-18,'FUNDO DO GALPÃO',{fill:C('--ink-mute'),'font-size':10.5,'letter-spacing':'.12em'});
+
+  // divisórias entre zonas
+  [xE-GAPZ/2, xB-GAPZ/2].forEach(x=>el('line',{x1:x,y1:TOP-12,x2:x,y2:WALL,stroke:C('--line-strong'),'stroke-dasharray':'5 4','stroke-width':1}));
+
+  // túnel (A e B)
+  function tunel(x,w){ el('rect',{x,y:TUN0,width:w,height:TUN1-TUN0,fill:C('--zone')}); txt(x+w/2,(TUN0+TUN1)/2+3.5,'TÚNEL',{fill:C('--ink-mute'),'font-size':9.5,'letter-spacing':'.2em'}); }
+
+  function rack(x,y0,y1,novo,face){
+    const r = el('rect',{x,y:y0,width:RK,height:y1-y0,fill:novo?C('--ext-soft'):C('--rack'),stroke:novo?C('--ext'):'none','stroke-width':1.2,'stroke-dasharray':novo?'3 2':'none',rx:1});
+    txt(x+RK/2, novo? y0-4 : y1+11, face, {'font-size':8,fill:novo?C('--ext'):C('--ink-mute'),'font-weight':600});
+    return r;
+  }
+  function coluna(x,y){ el('rect',{x:x-5,y:y-5,width:10,height:10,fill:C('--col')}); }
+
+  function desenhaLado(lista, x0, cur, ext, cols, nome, faces){
+    const CUR1 = nome==='B' ? CUR1B : CUR1A;
+    let x = x0;
+    lista.forEach(it=>{
+      const w = wOf(it);
+      if (it.tipo==='drive'){
+        const g = el('g',{});
+        el('rect',{x:x+3,y:CUR0,width:w-6,height:CUR1-CUR0,fill:C('--rack-soft'),stroke:C('--rack'),'stroke-width':1.2},g);
+        for(let yy=CUR0+12; yy<CUR1; yy+=14) el('line',{x1:x+8,y1:yy,x2:x+w-8,y2:yy,stroke:C('--rack'),'stroke-width':.8,opacity:.5},g);
+        const t = txt(x+w/2,CUR0+(CUR1-CUR0)/2,'DRIVE '+it.k,{'font-size':10.5,fill:C('--ink'),'font-weight':600,transform:`rotate(-90 ${x+w/2} ${CUR0+(CUR1-CUR0)/2})`}); g.appendChild(t);
+        hover(g, tipCur('Drive '+it.k, cur[it.k]));
+      } else if (it.tipo==='receb'){
+        txt(x+RK+AI/2,CUR0+18,it.k,{'font-family':'Oswald','font-size':14,'font-weight':800,fill:C('--ink')});
+      } else {
+        const g = el('g',{});
+        el('rect',{x:x+RK,y:CUR0,width:AI,height:CUR1-CUR0,fill:'transparent'},g);
+        if (it.L) g.appendChild(rack(x,CUR0,CUR1,false,it.fL||faces.L));
+        if (it.R) g.appendChild(rack(x+RK+AI,CUR0,CUR1,false,faces.R));
+        g.appendChild(txt(x+RK+AI/2,CUR0+18,it.k,{'font-family':'Oswald','font-size':14,'font-weight':800,fill:C('--ink')}));
+        hover(g, tipCur((nome==='B'?'Rua ':'Corredor ')+it.k, cur[it.k]));
+      }
+      // extensão
+      if (it.ext){
+        const g = el('g',{});
+        el('rect',{x:x+RK,y:EXT0,width:AI,height:EXT1-EXT0,fill:'transparent'},g);
+        if (it.ext.L) g.appendChild(rack(x,EXT0,EXT1,true,faces.L));
+        if (it.ext.R) g.appendChild(rack(x+RK+AI,EXT0,EXT1,true,faces.R));
+        g.appendChild(txt(x+RK+AI/2,EXT1-10,it.k,{'font-family':'Oswald','font-size':14,'font-weight':800,fill:C('--ext')}));
+        hover(g, tipExt('Rua '+it.k, ext[it.k]));
+      }
+      if (cols.has(it.k) && !it.tipo) coluna(x+RK+AI/2,(TUN0+TUN1)/2 - 12);
+      x += w;
+    });
+  }
+
+  // Lado A: túnel cobre as ruas com extensão (Y..O)
+  const idxO = ladoA.findIndex(i=>i.k==='O'), xTunA = xA + ladoA.slice(0,idxO).reduce((s,i)=>s+wOf(i),0);
+  const wTunA = xA+wA-xTunA;
+  tunel(xTunA, wTunA);
+  // Escritório: canto da frente do Lado A, junto às docas 79–80 e ao E-COM
+  const esW = 92, esX = xA+wA-esW-2, esY = CUR1+14, esH = WALL-esY-8;
+  el('rect',{x:esX,y:esY,width:esW,height:esH,fill:C('--zone'),stroke:C('--ink-soft'),'stroke-width':1.5,rx:3});
+  txt(esX+esW/2,esY+esH/2+4,'ESCRITÓRIO',{'font-family':'Oswald','font-size':12.5,'font-weight':800,fill:C('--ink'),'letter-spacing':'.04em'});
+  // Recepção: ao lado do escritório, junto à doca 80
+  const rcW = 76, rcX = esX-rcW-6;
+  el('rect',{x:rcX,y:esY,width:rcW,height:esH,fill:C('--zone'),stroke:C('--ink-soft'),'stroke-width':1.5,rx:3});
+  txt(rcX+rcW/2,esY+esH/2+4,'RECEPÇÃO',{'font-family':'Oswald','font-size':12.5,'font-weight':800,fill:C('--ink'),'letter-spacing':'.04em'});
+  // Área de descanso: canto da frente do Lado A, embaixo do Drive R, junto à doca 88
+  const dsW = 92, dsX = xA+3;
+  el('rect',{x:dsX,y:esY,width:dsW,height:esH,fill:C('--zone'),stroke:C('--ink-soft'),'stroke-width':1.5,rx:3});
+  txt(dsX+dsW/2,esY+esH/2-2,'ÁREA DE',{'font-family':'Oswald','font-size':12.5,'font-weight':800,fill:C('--ink'),'letter-spacing':'.04em'});
+  txt(dsX+dsW/2,esY+esH/2+12,'DESCANSO',{'font-family':'Oswald','font-size':12.5,'font-weight':800,fill:C('--ink'),'letter-spacing':'.04em'});
+  // Marketing: espaço no fundo, atrás do Drive R, Q e P
+  const mkW = xTunA - xA - 10, mkY = EXT0 - 6, mkH = TUN1 - 10 - mkY;
+  el('rect',{x:xA+3,y:mkY,width:mkW,height:mkH,fill:C('--zone'),stroke:C('--ink-soft'),'stroke-width':1.5,rx:3});
+  txt(xA+3+mkW/2,mkY+mkH/2+5,'MARKETING',{'font-family':'Oswald','font-size':15,'font-weight':800,fill:C('--ink'),'letter-spacing':'.04em'});
+  const idxBA = ladoB.findIndex(i=>i.k==='A');
+  const xTunB = xB, wTunB = ladoB.slice(0,idxBA).reduce((s,i)=>s+wOf(i),0);
+  tunel(xTunB, wTunB);
+  desenhaLado(ladoA, xA, curA, extA, colA, 'A', {L:'I',R:'P'});
+  desenhaLado(ladoB, xB, curB, extB, colB, 'B', {L:'P',R:'I'});
+
+  // ---- E-COM ----
+  const ePad = 30, eGap = (W_ECOM - 2*ePad - 6*2*RK)/5;
+  const eY0 = EXT0, eY1 = 330;
+  const rx = [];
+  for(let i=0;i<6;i++){
+    const x = xE + ePad + i*(2*RK+eGap); rx.push(x);
+    const g = el('g',{});
+    g.appendChild(rack(x,eY0,eY1,true,'P'));
+    g.appendChild(rack(x+RK,eY0,eY1,true,'I'));
+    g.appendChild(txt(x+RK,eY1+24,'L'+(i+1),{'font-size':9.5,fill:C('--ext'),'font-weight':600}));
+    const temCol = (i===0||i===4), op = 468-(temCol?12:0);
+    g.appendChild(txt(x+RK,eY1+36,String(op),{'font-size':9,fill:temCol?C('--col'):C('--ink-soft'),'font-weight':600}));
+    hover(g, `<b>E-COM · linha ${i+1}</b><br>porta-palete novo, face par e ímpar<br>234 par + 234 ímpar = 468 brutas<br>(852 da rua do A − 384 da frente, 192 por face)${temCol?'<br>coluna: −12 · 456 operantes':'<br>468 operantes'}`);
+  }
+  // ajusta rótulos P/I de cima para baixo nas linhas do E-COM? (rack() já põe acima)
+  coluna(rx[0]+RK, eY0-20); txt(rx[0]+RK+24, eY0-16, 'COLUNA', {'font-size':8.5,fill:C('--col'),'text-anchor':'start'});
+  coluna(rx[4]+RK, eY0-20); txt(rx[4]+RK+24, eY0-16, 'COLUNA', {'font-size':8.5,fill:C('--col'),'text-anchor':'start'});
+  // área de operação
+  const opX = rx[0]-6, opW = rx[4]+2*RK+6-opX;
+  el('rect',{x:opX,y:372,width:opW,height:140,fill:C('--zone'),stroke:C('--ink-soft'),'stroke-width':1.5,rx:3});
+  txt(opX+opW/2,436,'OP. E-COMMERCE',{'font-family':'Oswald','font-size':18,'font-weight':800,fill:C('--ink'),'letter-spacing':'.04em'});
+  txt(opX+opW/2,454,'área de operação',{'font-size':10,fill:C('--ink-mute')});
+
+  // ---- cabeçalhos de zona ----
+  const zt = (x,w,a,b,cor) => { txt(x+w/2,CUR1+40,a,{'font-family':'Oswald','font-size':17,'font-weight':800,fill:cor||C('--ink'),'letter-spacing':'.05em'}); txt(x+w/2,CUR1+56,b,{'font-size':10,fill:C('--ink-mute')}); };
+  zt(xA,wA,'LADO A · EXPEDIÇÃO','ARM e expedição');
+  zt(xE,W_ECOM,'E-COM','6 linhas novas · 2.808 brutas · 2.784 operantes', C('--ext'));
+  // Lado B: área da frente, máquinas e salas junto à parede
+  const xM = xB+wB-W_M;
+  const frX = xB+3, frY = CUR1B+40, frW = xM-frX-10, frH = WALL-frY-8;
+  el('rect',{x:frX,y:frY,width:frW,height:frH,fill:'none',stroke:C('--ink-soft'),'stroke-width':1.5,rx:3});
+  txt(frX+frW/2,frY+frH/2-2,'LADO B · ALMOXARIFADO',{'font-family':'Oswald','font-size':17,'font-weight':800,fill:C('--ink'),'letter-spacing':'.05em'});
+  txt(frX+frW/2,frY+frH/2+14,'área da frente',{'font-size':10,fill:C('--ink-mute')});
+  const salas = [['MÁQUINAS',CUR1B,CUR1B+36,false],['SALA ADM',CUR1B+36,CUR1B+78,true],['QUALIDADE 1',CUR1B+78,CUR1B+112,true],['QUALIDADE 2',CUR1B+112,CUR1B+146,true],['LIMPEZA',CUR1B+146,WALL,true]];
+  salas.forEach(([nm,y0,y1,sala])=>{
+    el('rect',{x:xM+3,y:y0+2,width:W_M-6,height:y1-y0-4,fill:sala?C('--zone'):'none',stroke:C('--ink-soft'),'stroke-width':sala?1.2:0,'stroke-dasharray':sala?'none':'0',rx:2});
+    txt(xM+W_M/2,(y0+y1)/2+3.5,nm,{'font-size':9,'font-weight':600,fill:C('--ink')});
+  });
+  txt(xTunA+wTunA/2,EXT0-14,'EXTENSÃO A · ruas O–Y',{'font-size':10,fill:C('--ext'),'font-weight':600,'letter-spacing':'.06em'});
+  txt(xTunB+wTunB/2,EXT0-14,'EXTENSÃO B · ruas J–B',{'font-size':10,fill:C('--ext'),'font-weight':600,'letter-spacing':'.06em'});
+
+  // ---- docas (88 → 54, da esquerda para a direita) ----
+  function docas(x,w,de,ate){
+    const n = de-ate+1, step = w/n;
+    for(let i=0;i<n;i++){
+      const cx = x+step*i+step/2, num = de-i;
+      el('rect',{x:cx-step*0.36,y:WALL-3,width:step*0.72,height:7,fill:C('--surface'),stroke:C('--ink-soft'),'stroke-width':1});
+      txt(cx,WALL+20,String(num),{'font-size':step<26?8:9,fill:C('--ink-soft')});
+    }
+    txt(x+w/2,WALL+40,`DOCAS ${ate}–${de}`,{'font-size':10.5,'font-weight':600,fill:C('--ink'),'letter-spacing':'.08em'});
+  }
+  docas(xA,wA,88,79);
+  docas(xE,W_ECOM,78,66);
+  docas(xB,xM-xB-6,65,53);
+  txt(totalW/2,totalH-8,'FRENTE · PÁTIO DE DOCAS',{fill:C('--ink-mute'),'font-size':10.5,'letter-spacing':'.12em'});
+
+  // ---- tabelas de quantidades ----
+  const f0 = n => n ? fmt(n) : '—';
+  const head = (nomeCol) => `<thead><tr class="grp"><th></th><th class="sep" colspan="3">Hoje</th><th class="sep ext" colspan="4">Extensão</th><th class="sep" colspan="2">Total</th></tr>
+    <tr><th>${nomeCol}</th><th class="sep">Brutas</th><th>Inop.</th><th>Operantes</th><th class="sep">Lados</th><th>Brutas</th><th>Inop.</th><th>Operantes</th><th class="sep">Brutas</th><th>Operantes</th></tr></thead>`;
+  function linhas(ordem, cur, ext, nomeFn, cols){
+    const T={hc:0,hi:0,ho:0,el:0,ec:0,ei:0,eo:0};
+    const rows = ordem.map(k=>{
+      const c = cur[k], e = ext[k];
+      const hc=c?c[0]:0, hi=c?c[1]:0, ho=hc-hi;
+      const el_=e?e.lados:0, ec=e?e.cap:0, ei=e?e.inop:0, eo=ec-ei;
+      T.hc+=hc;T.hi+=hi;T.ho+=ho;T.el+=el_;T.ec+=ec;T.ei+=ei;T.eo+=eo;
+      return `<tr><td class="rua">${nomeFn(k)}${cols.has(k)?' <span class="col" title="coluna">●</span>':''}</td>
+        <td class="sep">${f0(hc)}</td><td class="dim">${f0(hi)}</td><td>${f0(ho)}</td>
+        <td class="sep ext">${f0(el_)}</td><td class="ext">${f0(ec)}</td><td class="ext">${ei?'−'+ei:'—'}</td><td class="ext">${f0(eo)}</td>
+        <td class="sep tot">${fmt(hc+ec)}</td><td class="tot">${fmt(ho+eo)}</td></tr>`;
+    }).join('');
+    const tot = `<tr class="total"><td class="rua">Total</td><td class="sep">${fmt(T.hc)}</td><td>${fmt(T.hi)}</td><td>${fmt(T.ho)}</td>
+      <td class="sep ext">${T.el}</td><td class="ext">${fmt(T.ec)}</td><td class="ext">−${fmt(T.ei)}</td><td class="ext">${fmt(T.eo)}</td>
+      <td class="sep">${fmt(T.hc+T.ec)}</td><td>${fmt(T.ho+T.eo)}</td></tr>`;
+    return {html: rows+tot, T};
+  }
+  const ordA = ['Y','Z','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R'];
+  const ordB = ['J','I','H','G','F','E','D','C','B','A','M'];
+  const rA = linhas(ordA, curA, extA, k=>k==='R'?'Drive R':k, colA);
+  const rB = linhas(ordB, curB, extB, k=>k==='M'?'Drive M':k, colB);
+  document.getElementById('tbl-A').innerHTML = head('Corredor') + '<tbody>'+rA.html+'</tbody>';
+  document.getElementById('tbl-B').innerHTML = head('Rua') + '<tbody>'+rB.html+'</tbody>';
+
+  // E-COM: 6 linhas novas, 234 por face, coluna em L1 e L5
+  const ecom = [1,2,3,4,5,6].map(i=>({i, cap:468, inop:(i===1||i===5)?12:0}));
+  const E = {cap:ecom.reduce((s,o)=>s+o.cap,0), inop:ecom.reduce((s,o)=>s+o.inop,0)}; E.op=E.cap-E.inop;
+  document.getElementById('tbl-E').innerHTML = `<thead><tr><th>Linha</th><th class="sep">Face par</th><th>Face ímpar</th><th class="sep">Brutas</th><th>Inop.</th><th>Operantes</th></tr></thead><tbody>`+
+    ecom.map(o=>`<tr><td class="rua">L${o.i}${o.inop?' <span class="col" title="coluna">●</span>':''}</td><td class="sep">234</td><td>234</td><td class="sep">${fmt(o.cap)}</td><td class="dim">${o.inop?'−'+o.inop:'—'}</td><td class="tot">${fmt(o.cap-o.inop)}</td></tr>`).join('')+
+    `<tr class="total"><td class="rua">Total</td><td class="sep">${fmt(6*234)}</td><td>${fmt(6*234)}</td><td class="sep">${fmt(E.cap)}</td><td>−${E.inop}</td><td>${fmt(E.op)}</td></tr></tbody>`;
+  document.getElementById('tbl-E').style.minWidth='480px';
+
+  // ---- cards de totais ----
+  const A=rA.T, B=rB.T;
+  const hojeC=A.hc+B.hc, hojeO=A.ho+B.ho, extC=A.ec+B.ec, extO=A.eo+B.eo;
+  const cards = [
+    ['Hoje (A + B)', hojeO, hojeC, `A ${fmt(A.ho)} · B ${fmt(B.ho)}`],
+    ['Extensão (A + B)', extO, extC, `A +${fmt(A.eo)} · B +${fmt(B.eo)}`],
+    ['E-COM (novo)', E.op, E.cap, `6 linhas · 468 por linha`],
+    ['Galpão com o projeto', hojeO+extO+E.op, hojeC+extC+E.cap, `+${fmt(extO+E.op)} operantes sobre hoje`, true],
+  ];
+  if (document.getElementById('totais')) document.getElementById('totais').innerHTML = cards.map(([l,o,b,s,f])=>`<div class="tc${f?' final':''}"><div class="lb">${l}</div><div class="v">${fmt(o)}<small>operantes</small></div><div class="s">${fmt(b)} brutas · ${s}</div></div>`).join('');
+
+  // ---- abas ----
+  const tabs = document.querySelectorAll('.tab');
+  function abrir(t){
+    tabs.forEach(b=>b.setAttribute('aria-selected', b.dataset.tab===t?'true':'false'));
+    ['resumo','det'].forEach(k=>document.getElementById('pane-'+k).hidden = k!==t);
+    try{ localStorage.setItem('galpao-aba', t); }catch(e){}
+  }
+  tabs.forEach(b=>b.addEventListener('click',()=>abrir(b.dataset.tab)));
+  let abaIni = (location.hash||'').slice(1);
+  if(!['resumo','det'].includes(abaIni)){ try{ abaIni = localStorage.getItem('galpao-aba')||'resumo'; }catch(e){ abaIni='resumo'; } }
+  abrir(['resumo','det'].includes(abaIni)?abaIni:'resumo');
+
+  // ---- resumo: posições e ocupação ----
+  const OCUP_A_PLANILHA = 7725; // armazenagem.xlsx (aba Capacidade), sem a rua Y
+  const OCUP_B = 4417; // paletes alocados no Lado B (informado)
+  const inA = document.getElementById('oc-A'), inB = document.getElementById('oc-B');
+  let salvo = {};
+  try{ salvo = JSON.parse(localStorage.getItem('galpao-ocup-v3')||'{}'); }catch(e){}
+  inA.value = salvo.A ?? OCUP_A_PLANILHA;
+  inB.value = salvo.B ?? OCUP_B;
+  const pct = (a,b) => b ? (a/b*100) : null;
+  const fp = v => v==null ? '—' : v.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+'%';
+  function resumo(){
+    const oA = Math.max(0, +inA.value||0), temB = inB.value!=='' , oB = Math.max(0, +inB.value||0);
+    try{ localStorage.setItem('galpao-ocup-v3', JSON.stringify({A:inA.value, B:inB.value})); }catch(e){}
+    const hojeOp = A.ho+B.ho, hojeBr = A.hc+B.hc, extOp = hojeOp+A.eo+B.eo, extBr = hojeBr+A.ec+B.ec;
+    // ocupação: galpão inteiro quando o Lado B está informado; senão só o Lado A
+    const occ = temB ? oA+oB : oA;
+    const baseHoje = temB ? hojeOp : A.ho, baseExt = temB ? extOp+E.op : A.ho+A.eo;
+    const escopo = temB ? 'Lados A + B' : 'só Lado A (informe o Lado B)';
+    const pH = pct(occ, baseHoje), pE = pct(occ, baseExt);
+    const bar = (v,cls) => `<div class="bar ${cls||''}"><i style="width:${Math.min(100,v||0)}%"></i></div>`;
+    const card = (lb, v, sub, cls, b) => `<div class="kp ${cls||''}"><div class="lb">${lb}</div><div class="v">${v}</div><div class="s">${sub}</div>${b||''}</div>`;
+    document.getElementById('kpis').innerHTML =
+      card('Posições atuais', fmt(hojeOp), 'operantes')+
+      card('Com extensão', fmt(extOp+E.op), `operantes · +${fmt(extOp+E.op-hojeOp)}`, 'final')+
+      card('% verticalizada relativa a extensão', fp(pct(hojeOp, extOp+E.op)), `${fmt(hojeOp)} de ${fmt(extOp+E.op)}`, '', bar(pct(hojeOp, extOp+E.op)))+
+      card('Posições ocupadas', fmt(occ), temB?'paletes alocados':'só Lado A')+
+      card('Ocupação atual', fp(pH), `${fmt(occ)} de ${fmt(baseHoje)}`, '', bar(pH))+
+      card('Ocupação com extensão', fp(pE), `${fmt(occ)} de ${fmt(baseExt)}`, 'sim', bar(pE,'ext'));
+    const linha = (nm, o, h, e, tem) => `<div class="orow"><div class="nm">${nm}</div>
+      <div class="cell"><div class="t"><span>${tem?fmt(o)+' / '+fmt(h):'sem ocupação informada'}</span><b>${tem?fp(pct(o,h)):'—'}</b></div>${bar(tem?pct(o,h):0)}</div>
+      <div class="cell e"><div class="t"><span>${tem?fmt(o)+' / '+fmt(e):fmt(e)+' operantes'}</span><b>${tem?fp(pct(o,e)):'—'}</b></div><div class="bar ext"><i style="width:${tem?Math.min(100,pct(o,e)):0}%"></i></div></div></div>`;
+    document.getElementById('occ-rows').innerHTML =
+      `<div class="orow hd"><span></span><span>Hoje</span><span>Com extensão</span></div>`+
+      linha('Lado A', oA, A.ho, A.ho+A.eo, true)+
+      linha('Lado B', oB, B.ho, B.ho+B.eo, temB)+
+      linha('Galpão <small class="simtag">com extensões + E-COM</small>', oA+oB, hojeOp, extOp+E.op, temB);
+  }
+  [inA,inB].forEach(i=>i.addEventListener('input',resumo));
+  resumo();
+})();
+</script>

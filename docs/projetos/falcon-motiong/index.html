@@ -1,0 +1,1241 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Falcon Telemetria · Setembro 2026 · AS</title>
+<style>
+  :root{
+    /* tema "im" do Resumo Mensal e Anual — vermelho e bordô sobre papel claro */
+    --paper:#f5f2f0; --paper-2:#fbf9f8;
+    --orange:#e60000; --red-hi:#ff2d1f; --cyan:#7a1414; --bordo-2:#4f0c0c;
+    --text:#221a16; --muted:#6b5f58; --faint:#a3978f;
+    --green:#1b8a5a; --amber:#b7791f; --red:#b91c1c; --neutral:#4a4a4a;
+    --hair:rgba(122,20,20,.10); --hair-2:rgba(34,26,22,.07);
+    --glass:linear-gradient(160deg,rgba(255,255,255,.88),rgba(255,255,255,.62));
+    --sh:0 1px 2px rgba(34,26,22,.05),0 10px 24px -14px rgba(34,26,22,.16),0 28px 56px -34px rgba(122,20,20,.26);
+    --sh-hi:0 2px 4px rgba(34,26,22,.06),0 18px 34px -16px rgba(34,26,22,.20),0 40px 70px -34px rgba(122,20,20,.34);
+    --r-xl:28px; --r-lg:24px; --r-md:20px;
+    --display:"Oswald","Arial Narrow","Liberation Sans Narrow","Roboto Condensed","Helvetica Neue",Arial,sans-serif;
+    --sans:"Inter","Segoe UI","Helvetica Neue",Arial,"Liberation Sans",sans-serif;
+    --mono:"JetBrains Mono",ui-monospace,"Cascadia Mono",Consolas,"Liberation Mono",monospace;
+    --head:60px; --nav:98px;
+    --e-out:cubic-bezier(.16,1,.3,1);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;overflow:hidden;color:var(--text);font:14px/1.5 var(--sans);font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased;
+    background:radial-gradient(1200px 700px at 0% 0%,#fff 0%,transparent 60%),linear-gradient(180deg,var(--paper-2),var(--paper))}
+  button{font:inherit;color:inherit;cursor:pointer}
+  :focus-visible{outline:2px solid var(--orange);outline-offset:3px;border-radius:8px}
+  body.busy .stage,body.busy .nav button{pointer-events:none}
+
+  /* ---------- fundo vivo: brilho por capítulo, estrelas em 3 camadas, grade ---------- */
+  .glow{position:fixed;left:0;top:0;width:120vmax;height:120vmax;z-index:0;pointer-events:none;border-radius:50%;
+    background:radial-gradient(circle at 50% 50%,rgba(230,0,0,.13) 0%,rgba(230,0,0,.05) 26%,rgba(122,20,20,.03) 42%,transparent 62%);
+    transition:transform 1.6s cubic-bezier(.22,.9,.24,1)}
+  #stars,#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
+  #stars{z-index:0}
+  #fx{z-index:3}
+  .grid-ov{position:fixed;inset:0;z-index:0;pointer-events:none;
+    background-image:linear-gradient(rgba(122,20,20,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(122,20,20,.045) 1px,transparent 1px);
+    background-size:56px 56px;-webkit-mask-image:radial-gradient(ellipse 70% 60% at 50% 45%,#000 20%,transparent 75%);mask-image:radial-gradient(ellipse 70% 60% at 50% 45%,#000 20%,transparent 75%)}
+
+  /* ---------- HUD superior ---------- */
+  .hud{position:fixed;inset:0 0 auto 0;height:var(--head);z-index:6;display:flex;align-items:center;gap:20px;padding:0 24px;
+    background:rgba(251,249,248,.72);backdrop-filter:blur(16px) saturate(1.3);-webkit-backdrop-filter:blur(16px) saturate(1.3);border-bottom:1px solid var(--hair)}
+  .brand{display:flex;align-items:center;gap:11px;font:800 15px/1 var(--display);letter-spacing:.2em;text-transform:uppercase;white-space:nowrap}
+  .brand .mk{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;color:#fff;font-size:14px;letter-spacing:0;
+    background:linear-gradient(140deg,var(--red-hi),var(--orange) 45%,var(--cyan));box-shadow:0 6px 16px -6px rgba(230,0,0,.6),inset 0 1px 0 rgba(255,255,255,.35)}
+  .brand b{color:var(--orange)}
+  .mission{font:600 10.5px/1 var(--mono);letter-spacing:.16em;color:var(--muted);text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mission em{font-style:normal;color:var(--text)}
+  .hud .sp{flex:1}
+  .pill{display:inline-flex;align-items:center;gap:8px;padding:7px 13px;border-radius:99px;background:rgba(255,255,255,.7);border:1px solid var(--hair);
+    font:600 10px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;white-space:nowrap;box-shadow:0 1px 2px rgba(34,26,22,.04)}
+  .pill i{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px rgba(27,138,90,.15);animation:blink 1.8s infinite}
+  @keyframes blink{50%{opacity:.3}}
+  .clockbox{display:flex;align-items:center;gap:10px;padding:6px 6px 6px 12px;border-radius:99px;background:var(--text);color:#fff;white-space:nowrap}
+  .clockbox > i{width:8px;height:8px;border-radius:50%;background:#fff;opacity:.9}
+  .clockbox[data-state="pre"] > i{background:#ffb020;animation:blink .5s infinite}
+  .clockbox[data-state="flight"] > i{background:#ff4a3c;animation:blink 1.4s infinite}
+  .clockbox[data-state="hold"] > i{background:#a3978f}
+  .clockbox[data-state="landed"] > i{background:#3ddc84}
+  .clockbox b{font:700 13px/1 var(--mono);letter-spacing:.06em;padding:6px 10px;border-radius:99px;background:var(--orange);min-width:92px;text-align:center}
+  .clockbox[data-state="pre"] b{background:var(--cyan)}
+  .clockbox[data-state="hold"] b{background:var(--neutral)}
+  .clockbox[data-state="landed"] b{background:var(--green)}
+  .mprog{position:absolute;left:0;right:0;bottom:-1px;height:3px;background:rgba(122,20,20,.06);overflow:hidden}
+  .mprog i{display:block;height:100%;background:linear-gradient(90deg,var(--orange),var(--cyan));transform-origin:left;transform:scaleX(0)}
+
+  /* ---------- palco, cenas, sobreposição de transição ---------- */
+  .stage{position:fixed;top:var(--head);bottom:var(--nav);left:0;right:0;z-index:2}
+  .scene{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;visibility:hidden;opacity:0;scrollbar-width:thin;transform-origin:50% 45%}
+  .scene.active,.scene.tr{visibility:visible}
+  .scene.active{opacity:1}
+  .scene.clone{pointer-events:none}
+  .tx{position:fixed;top:var(--head);bottom:var(--nav);left:0;right:0;z-index:4;pointer-events:none;overflow:hidden}
+  .sc{max-width:1320px;margin:0 auto;min-height:100%;padding:22px 32px 24px;display:flex;flex-direction:column;gap:16px}
+  .sc-head{display:flex;flex-direction:column;gap:8px}
+  .eyebrow{align-self:flex-start;display:inline-flex;align-items:center;gap:9px;padding:6px 12px 6px 10px;border-radius:99px;background:rgba(255,255,255,.75);border:1px solid var(--hair);
+    font:700 10.5px/1 var(--mono);letter-spacing:.22em;text-transform:uppercase;color:var(--orange)}
+  .eyebrow::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--orange);box-shadow:0 0 0 3px rgba(230,0,0,.14)}
+  .eyebrow span{color:var(--muted)}
+  h2{font:800 clamp(30px,3.7vw,54px)/.98 var(--display);text-transform:uppercase;letter-spacing:-.005em;margin:2px 0 0;color:var(--text)}
+  h2 small{display:block;font:400 14.5px/1.5 var(--sans);text-transform:none;letter-spacing:0;color:var(--muted);margin-top:10px;max-width:74ch}
+  @media (min-width:1101px){h2{display:flex;align-items:flex-end;justify-content:space-between;gap:28px}h2 small{max-width:44ch;margin:0 0 4px;text-align:right}}
+
+  /* ---------- bento ---------- */
+  .bento{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:16px;align-items:stretch}
+  .c-3{grid-column:span 3}.c-4{grid-column:span 4}.c-5{grid-column:span 5}.c-7{grid-column:span 7}.c-8{grid-column:span 8}.c-12{grid-column:span 12}
+  .r-2{grid-row:span 2}.r-3{grid-row:span 3}.r-4{grid-row:span 4}
+  .card{position:relative;border-radius:var(--r-lg);padding:20px 22px;background:var(--glass);border:1px solid rgba(255,255,255,.9);
+    box-shadow:var(--sh),inset 0 0 0 1px var(--hair),inset 0 1px 0 #fff;backdrop-filter:blur(8px) saturate(1.2);-webkit-backdrop-filter:blur(8px) saturate(1.2);
+    transition:transform .45s var(--e-out)}
+  .card::after{content:"";position:absolute;inset:0;border-radius:inherit;box-shadow:var(--sh-hi);opacity:0;transition:opacity .45s var(--e-out);pointer-events:none}
+  .card:hover{transform:translateY(-3px)}
+  .card:hover::after{opacity:1}
+  .card-h{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px}
+  .lbl{font:700 10.5px/1.25 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+  .card-h b{font:700 10.5px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--text);padding:6px 10px;border-radius:99px;background:rgba(122,20,20,.06)}
+  .big{font:800 clamp(36px,3.4vw,54px)/1 var(--display);letter-spacing:-.01em;margin-top:8px}
+  .big .lbl{font-size:11px;letter-spacing:.2em;vertical-align:middle}
+  .sub{font-size:12.5px;color:var(--muted);margin-top:8px}
+  .t-red{color:var(--orange)}.t-bordo{color:var(--cyan)}
+  .bar{height:8px;border-radius:99px;background:rgba(34,26,22,.06);overflow:hidden;margin-top:14px}
+  .bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--red-hi),var(--orange) 40%,var(--cyan));transform-origin:left}
+  .leitura{margin:auto 0 0;padding:15px 20px;border-radius:var(--r-md);background:var(--glass);border:1px solid rgba(255,255,255,.9);
+    box-shadow:var(--sh),inset 0 0 0 1px var(--hair);font-size:14px;color:#3d3330;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+  .leitura::before{content:"LEITURA";display:inline-block;margin-right:12px;padding:5px 9px;border-radius:99px;background:var(--orange);color:#fff;
+    font:700 9.5px/1 var(--mono);letter-spacing:.22em;vertical-align:1px}
+  .leitura b{color:var(--text)}
+
+  /* qualidade adaptativa: se a máquina não sustenta 40 fps, o vidro dos cards vira gradiente translúcido (sem blur ao vivo) */
+  body.lite .card,body.lite .leitura{backdrop-filter:none;-webkit-backdrop-filter:none;background:linear-gradient(160deg,rgba(255,255,255,.96),rgba(255,255,255,.84))}
+  body.lite .hero{background:linear-gradient(135deg,#ff2d1f 0%,var(--orange) 34%,#a80d0d 70%,var(--cyan) 100%)}
+  body.lite .launch,body.lite .landing{background:linear-gradient(180deg,rgba(255,255,255,.7),rgba(255,255,255,.92) 70%,rgba(246,238,235,.98))}
+
+  /* ---------- tooltip ---------- */
+  #tip{position:fixed;left:0;top:0;z-index:9;pointer-events:none;padding:9px 12px;border-radius:12px;background:rgba(34,26,22,.93);color:#fff;
+    font:600 11.5px/1.45 var(--mono);white-space:nowrap;box-shadow:0 12px 28px -10px rgba(34,26,22,.5);opacity:0;transition:opacity .15s}
+  #tip::after{content:"";position:absolute;left:50%;bottom:-5px;width:10px;height:10px;background:inherit;transform:translateX(-50%) rotate(45deg);border-radius:2px}
+  #tip.show{opacity:1}
+
+  /* ---------- foguete (SVG compartilhado) ---------- */
+  .rk{display:block;width:100%;height:100%;overflow:visible}
+  .rk .flame-wrap{transform-box:fill-box;transform-origin:50% 0;transform:scale(0);transition:transform .45s var(--e-out)}
+  .rk[data-fl="1"] .flame-wrap{transform:scale(.3,.25)}
+  .rk[data-fl="2"] .flame-wrap{transform:scale(.8,.75)}
+  .rk[data-fl="3"] .flame-wrap{transform:scale(1.15,1.35)}
+  .rk .fl-a,.rk .fl-b,.rk .fl-c{transform-box:fill-box;transform-origin:50% 0}
+  .rk .fl-a{animation:flk .09s infinite alternate}
+  .rk .fl-b{animation:flk2 .13s infinite alternate}
+  .rk .fl-c{animation:flk .07s infinite alternate-reverse}
+  @keyframes flk{to{transform:scale(.9,.84)}}
+  @keyframes flk2{to{transform:scale(.84,1.1)}}
+  .rk .fglow{opacity:0;transition:opacity .5s}
+  .rk[data-fl="2"] .fglow,.rk[data-fl="3"] .fglow{opacity:1}
+  .rk .heat{opacity:0;transition:opacity .7s}
+  .rk[data-heat="1"] .heat{opacity:1}
+  .rk .heat-in{transform-box:fill-box;transform-origin:50% 50%;animation:heat .18s infinite alternate}
+  @keyframes heat{to{transform:scale(1.08);opacity:.8}}
+
+  /* ---------- 01 · ignição ---------- */
+  .b1{grid-auto-rows:minmax(0,auto)}
+  .hero{background:linear-gradient(135deg,#ff2d1f 0%,var(--orange) 34%,#a80d0d 70%,var(--cyan) 100%);color:#fff;border-color:rgba(255,255,255,.25);
+    box-shadow:0 2px 4px rgba(122,20,20,.18),0 24px 48px -22px rgba(230,0,0,.55),inset 0 1px 0 rgba(255,255,255,.35);overflow:hidden;padding:24px 28px 26px}
+  .hero::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+    background:radial-gradient(600px 220px at 85% -20%,rgba(255,255,255,.35),transparent 60%),repeating-linear-gradient(115deg,rgba(255,255,255,.05) 0 2px,transparent 2px 14px)}
+  .hero .eyebrow{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.28);color:#fff}
+  .hero .eyebrow::before{background:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.25)}
+  .hero .eyebrow span{color:rgba(255,255,255,.75)}
+  .hero-n{position:relative;font:800 clamp(72px,9.2vw,140px)/.86 var(--display);letter-spacing:-.02em;margin:18px 0 10px;text-shadow:0 10px 30px rgba(79,12,12,.35)}
+  .hero-l{position:relative;font:700 13px/1.3 var(--mono);letter-spacing:.26em;text-transform:uppercase;color:rgba(255,255,255,.88)}
+  .kpi .big{font-size:clamp(34px,3vw,48px)}
+  .ticker{display:flex;flex-wrap:wrap;align-items:center;gap:10px 26px;font:600 12px/1.4 var(--mono);color:var(--muted);padding:16px 22px}
+  .ticker b{color:var(--orange);font-weight:800}
+  .launch{padding:0;overflow:visible;display:grid;grid-template-columns:1fr 1fr;min-height:520px;
+    background:linear-gradient(180deg,rgba(255,255,255,.55),rgba(255,255,255,.85) 70%,rgba(246,238,235,.95))}
+  .pad-scene{position:relative;overflow:visible}
+  .pad-scene::before{content:"";position:absolute;left:0;right:0;bottom:44px;height:1px;background:linear-gradient(90deg,transparent,rgba(122,20,20,.35),transparent)}
+  .tower{position:absolute;left:18%;bottom:44px;width:10px;height:62%;border-left:2px solid rgba(122,20,20,.28);border-right:2px solid rgba(122,20,20,.28);
+    background:repeating-linear-gradient(135deg,transparent 0 9px,rgba(122,20,20,.22) 9px 11px)}
+  .pad{position:absolute;left:50%;bottom:34px;width:120px;height:12px;border-radius:6px;transform:translateX(-50%);
+    background:linear-gradient(180deg,#d9cfca,#b9aca5);box-shadow:0 6px 16px -6px rgba(34,26,22,.4)}
+  .pad::before,.pad::after{content:"";position:absolute;top:-5px;width:6px;height:6px;border-radius:50%;background:var(--orange);box-shadow:0 0 8px var(--orange);animation:blink 1.2s infinite}
+  .pad::before{left:8px}.pad::after{right:8px;animation-delay:.6s}
+  .rk-fly{position:absolute;left:50%;bottom:46px;width:96px;height:256px;margin-left:-48px;z-index:2;will-change:transform}
+  .contrail{position:absolute;left:50%;bottom:120px;width:6px;height:120%;margin-left:-3px;border-radius:6px;opacity:0;transform-origin:bottom;transform:scaleY(.2);
+    background:linear-gradient(0deg,rgba(255,255,255,.95),rgba(214,204,199,.55) 40%,transparent);transition:opacity 1.2s,transform 1.6s var(--e-out)}
+  .launch.launched .contrail{opacity:.9;transform:scaleY(1)}
+  .cd{position:absolute;left:50%;top:18%;width:200px;margin-left:-100px;text-align:center;z-index:3;opacity:0;
+    font:800 150px/1 var(--display);color:var(--orange);text-shadow:0 14px 40px rgba(230,0,0,.35)}
+  .tele{list-style:none;margin:0;padding:26px 22px 26px 6px;display:flex;flex-direction:column;justify-content:center;gap:16px}
+  .tele li{display:flex;flex-direction:column;gap:5px;padding-left:14px;border-left:2px solid rgba(230,0,0,.25)}
+  .tele li span{font:700 9.5px/1.2 var(--mono);letter-spacing:.18em;color:var(--muted)}
+  .tele li b{font:800 19px/1.1 var(--display);letter-spacing:.01em}
+
+  /* ---------- 02 · trajetória ---------- */
+  .flow{padding:30px 22px 22px}
+  .flow canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;border-radius:inherit}
+  .nodes{position:relative;display:grid;grid-template-columns:repeat(7,1fr);gap:10px}
+  .node{background:none;border:0;padding:0;text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px;transition:transform .35s var(--e-out)}
+  .node:hover{transform:translateY(-3px)}
+  .node .dot{width:56px;height:56px;border-radius:18px;display:grid;place-items:center;font:700 13px/1 var(--mono);color:var(--cyan);
+    background:linear-gradient(160deg,#fff,#f4ecea);border:1px solid rgba(122,20,20,.16);box-shadow:0 8px 18px -10px rgba(122,20,20,.45),inset 0 1px 0 #fff;
+    transition:transform .35s var(--e-out),background .35s,color .35s}
+  .node.ret .dot{color:var(--red)}
+  .node.sel .dot{background:linear-gradient(140deg,var(--red-hi),var(--orange) 50%,var(--cyan));color:#fff;transform:scale(1.08);border-color:transparent;
+    box-shadow:0 14px 28px -12px rgba(230,0,0,.7)}
+  .node .nm{font:700 11px/1.1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+  .node .nv{font:800 clamp(20px,2vw,28px)/1.05 var(--display)}
+  .node .nu{font-size:11px;color:var(--muted);line-height:1.3}
+  .detail{align-items:stretch}
+  .dt-h{display:flex;flex-direction:column;justify-content:space-between;overflow:hidden}
+  .dt-name{font:800 clamp(28px,2.6vw,40px)/1 var(--display);text-transform:uppercase;letter-spacing:.01em;margin-top:10px}
+  .dt-h .sub{margin-top:14px;font-size:13px}
+  .dt-h .dv{display:block;font:800 clamp(72px,7vw,112px)/.9 var(--display);letter-spacing:-.02em;color:var(--orange);margin-bottom:6px}
+  .dt-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  .dt-grid > div{padding:14px 14px 12px;border-radius:16px;background:rgba(255,255,255,.7);border:1px solid var(--hair-2)}
+  .dt-grid .v{font:800 24px/1.1 var(--display);margin-top:8px}
+  .dt-txt{margin-top:16px;font-size:14px;color:#3d3330;line-height:1.6}
+
+  /* ---------- 03 · pulso ---------- */
+  .pulse-card{display:flex;align-items:center;justify-content:center;padding:14px}
+  .pulse-wrap{position:relative;width:min(100%,560px,calc(100svh - var(--head) - var(--nav) - 230px));min-width:260px;aspect-ratio:1}
+  .pulse-wrap svg{position:absolute;inset:0;width:100%;height:100%}
+  .radar{position:absolute;left:50%;top:50%;width:86.2%;aspect-ratio:1;margin:-43.1% 0 0 -43.1%;border-radius:50%;pointer-events:none;
+    background:conic-gradient(from 0deg,rgba(230,0,0,.16) 0deg 12deg,transparent 12deg);
+    -webkit-mask-image:radial-gradient(circle,transparent 0 28.8%,#000 29.2%);mask-image:radial-gradient(circle,transparent 0 28.8%,#000 29.2%);
+    transition:transform .5s var(--e-out)}
+  .radar::before{content:"";position:absolute;left:50%;top:0;width:2px;height:50%;margin-left:-1px;background:linear-gradient(0deg,transparent 0 58%,var(--orange));border-radius:2px}
+  .spoke-o{stroke:var(--orange);stroke-width:4.5;stroke-linecap:round;transform-box:fill-box;transform-origin:50% 100%}
+  .spoke-c{stroke:var(--cyan);stroke-width:2.6;stroke-linecap:round;transform-box:fill-box;transform-origin:50% 0}
+  .we{opacity:.32}
+  .hit{fill:transparent;cursor:crosshair}
+  .dlab{font:600 9.5px var(--mono);fill:var(--faint);text-anchor:middle;dominant-baseline:middle}
+  .dlab.on{fill:var(--orange);font-weight:800}
+  .day-list{display:grid;gap:12px}
+  .day-row{display:grid;grid-template-columns:150px 1fr 92px;gap:12px;align-items:center}
+  .day-row .bar{margin:0;height:9px}
+  .day-row .bar i{transform:scaleX(0);transition:transform .5s var(--e-out)}
+  .day-row .val{font:800 20px/1 var(--display);text-align:right}
+  .scrub{display:flex;align-items:center;gap:12px;margin-top:16px}
+  .scrub input{flex:1;accent-color:var(--orange)}
+  .legend{display:flex;gap:18px;flex-wrap:wrap;font:600 10.5px/1 var(--mono);color:var(--muted);letter-spacing:.06em;margin-top:16px}
+  .legend i{display:inline-block;width:14px;height:4px;border-radius:2px;margin-right:6px;vertical-align:middle}
+
+  /* ---------- 04 · canais ---------- */
+  .split{margin-bottom:16px}
+  .split .row{display:flex;justify-content:space-between;gap:10px;font:700 10.5px/1 var(--mono);letter-spacing:.14em;color:var(--muted);text-transform:uppercase;margin-bottom:9px}
+  .split .track{display:flex;height:34px;border-radius:12px;overflow:hidden;background:rgba(34,26,22,.05);gap:3px}
+  .split .track i{display:flex;align-items:center;padding:0 12px;font:800 13px/1 var(--display);letter-spacing:.06em;white-space:nowrap;transform-origin:left;border-radius:10px}
+  .split .b2b{background:linear-gradient(90deg,var(--bordo-2),var(--cyan));color:#fff}
+  .split .b2c{background:linear-gradient(90deg,var(--orange),var(--red-hi));color:#fff;justify-content:flex-end}
+  .upp{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:6px}
+  .upp > div{padding:16px 18px;border-radius:18px;background:rgba(255,255,255,.7);border:1px solid var(--hair-2)}
+  .upp .big{font-size:clamp(72px,7vw,112px);line-height:.9;letter-spacing:-.02em}
+  .orbit{display:flex;align-items:center;justify-content:center;padding:18px}
+  .orb{position:relative;width:100%;max-width:520px;aspect-ratio:1}
+  .orb .ring{position:absolute;left:50%;top:50%;width:var(--s);aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;border:1px dashed rgba(122,20,20,.18)}
+  .orb .core{position:absolute;left:50%;top:50%;width:25%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:radial-gradient(circle at 35% 30%,#ff4a3c,var(--orange) 45%,var(--cyan));color:#fff;box-shadow:0 0 0 10px rgba(230,0,0,.08),0 20px 40px -14px rgba(230,0,0,.6)}
+  .orb .core span{font:700 10.5px/1 var(--mono);letter-spacing:.22em;opacity:.85}
+  .orb .core b{font:800 clamp(22px,2.4vw,32px)/1.05 var(--display)}
+  .arm{position:absolute;inset:0;animation:orb var(--T) linear infinite;animation-delay:var(--dl);animation-direction:var(--dir);will-change:transform}
+  .sat{position:absolute;top:50%;left:calc(50% + var(--R));width:var(--d);aspect-ratio:1;transform:translate(-50%,-50%)}
+  .sat-in{position:absolute;inset:0;animation:orb var(--T) linear infinite;animation-delay:var(--dl);animation-direction:var(--cdir)}
+  .sat-in i{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ff8a80,var(--orange) 60%,#b30000);opacity:var(--o);
+    box-shadow:0 6px 14px -6px rgba(230,0,0,.6);transition:transform .25s var(--e-out)}
+  .sat:hover .sat-in i{transform:scale(1.12)}
+  .sat-in span{position:absolute;top:calc(100% + 5px);left:50%;transform:translateX(-50%);text-align:center;white-space:nowrap;font:700 12px/1.2 var(--display);letter-spacing:.03em}
+  .sat-in span small{display:block;font:600 10px/1.2 var(--mono);color:var(--muted);letter-spacing:.04em}
+  @keyframes orb{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+  .scene:not(.active):not(.clone) .arm,.scene:not(.active):not(.clone) .sat-in,.scene:not(.active):not(.clone) .rk *{animation-play-state:paused}
+  table.cl{width:100%;border-collapse:collapse;font-size:13px}
+  table.cl th{font:700 10px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted);text-align:left;padding:0 10px 10px 0;border-bottom:1px solid var(--hair)}
+  table.cl td{padding:9px 10px 9px 0;border-bottom:1px solid var(--hair-2);vertical-align:middle}
+  table.cl tr:last-child td{border-bottom:0}
+  table.cl .r{text-align:right;white-space:nowrap}
+  .cellbar{position:relative;height:22px;border-radius:8px;background:rgba(34,26,22,.05);min-width:96px;overflow:hidden}
+  .cellbar i{position:absolute;inset:0 auto 0 0;border-radius:8px;background:linear-gradient(90deg,rgba(122,20,20,.85),rgba(230,0,0,.55));transform-origin:left}
+  .cellbar span{position:relative;font:700 11.5px/22px var(--mono);padding-left:8px;color:#fff;text-shadow:0 1px 2px rgba(79,12,12,.45)}
+
+  /* ---------- 05 · tripulação ---------- */
+  .seg{display:inline-flex;padding:3px;border-radius:99px;background:rgba(34,26,22,.06)}
+  .seg button{border:0;background:none;padding:7px 13px;border-radius:99px;font:700 10px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);transition:background .25s,color .25s}
+  .seg button[aria-pressed="true"]{background:var(--text);color:#fff}
+  .rank{display:grid;gap:11px}
+  .rank-row{display:grid;grid-template-columns:30px 120px 1fr 78px;gap:12px;align-items:center;font-size:13.5px}
+  .rank-row .p{font:700 11px/1 var(--mono);color:var(--faint)}
+  .rank-row.top .p{color:#fff;background:var(--orange);border-radius:8px;padding:5px 0;text-align:center}
+  .rank-row .nm{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .rank-row .tr{height:9px;border-radius:99px;background:rgba(34,26,22,.06);overflow:hidden}
+  .rank-row .tr i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--cyan),var(--orange));transform-origin:left}
+  .rank-row .q{font:800 15px/1 var(--display);text-align:right}
+  .eq{display:flex;align-items:flex-end;gap:7px;height:200px;padding-top:26px}
+  .eq .b{flex:1;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:8px;position:relative}
+  .eq .b i{width:100%;border-radius:9px 9px 4px 4px;background:linear-gradient(180deg,var(--cyan),rgba(122,20,20,.22));transform-origin:bottom}
+  .eq .b.pk i{background:linear-gradient(180deg,var(--red-hi),var(--orange) 40%,rgba(230,0,0,.25));box-shadow:0 10px 22px -8px rgba(230,0,0,.6)}
+  .eq .b span{font:600 10px/1 var(--mono);color:var(--faint)}
+  .eq .b em{position:absolute;top:-4px;font:800 13px/1 var(--display);font-style:normal;color:var(--orange);white-space:nowrap}
+
+  /* ---------- 06 · alcance ---------- */
+  .tiles{display:grid;grid-template-columns:repeat(6,1fr);gap:7px;max-width:372px;margin:0 auto}
+  .tile{aspect-ratio:1;border-radius:13px;border:1px solid rgba(122,20,20,.10);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:0;
+    background:rgba(230,0,0,var(--a,.05));transition:transform .3s var(--e-out),box-shadow .3s}
+  .tile:hover{transform:translateY(-3px) scale(1.04);box-shadow:0 12px 22px -10px rgba(122,20,20,.55)}
+  .tile b{font:800 14px/1 var(--display);letter-spacing:.06em}
+  .tile small{font:600 9.5px/1 var(--mono);color:inherit;opacity:.85}
+  .tile.hot{box-shadow:0 10px 24px -10px rgba(230,0,0,.75)}
+  .tile.sel{box-shadow:0 0 0 2px #fff,0 0 0 4px var(--text)}
+  .uf-big{font:800 clamp(72px,8vw,128px)/.88 var(--display);letter-spacing:-.02em;color:var(--orange)}
+  .uf-m{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px}
+  .uf-m > div{padding:14px;border-radius:16px;background:rgba(255,255,255,.7);border:1px solid var(--hair-2)}
+  .uf-m .v{font:800 26px/1.1 var(--display);margin-top:8px}
+  .tp-row{display:grid;grid-template-columns:1fr 74px 140px;gap:12px;align-items:center;font-size:13px;padding:9px 0;border-bottom:1px solid var(--hair-2)}
+  .tp-row:last-child{border-bottom:0}
+  .tp-row .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .tp-row .pz{display:flex;align-items:center;gap:9px;font:800 13px/1 var(--display);white-space:nowrap}
+  .tp-row .pz i{height:8px;border-radius:99px;display:block;transform-origin:left}
+
+  /* ---------- 07 · retorno ---------- */
+  .devol .big{font-size:clamp(64px,6.6vw,104px);line-height:.9;letter-spacing:-.02em}
+  .stack{display:flex;height:30px;border-radius:12px;overflow:hidden;margin:18px 0 12px;gap:3px;background:rgba(34,26,22,.05)}
+  .stack i{display:block;height:100%;border-radius:9px;transform-origin:left}
+  .keyl{display:grid;gap:7px;font-size:13px}
+  .keyl div{display:flex;justify-content:space-between;gap:10px}
+  .keyl i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:9px;vertical-align:-1px}
+  .mot{display:grid;gap:10px;margin-top:16px}
+  .mot-row{display:grid;grid-template-columns:1fr 70px;gap:10px;font-size:13px;align-items:center}
+  .mot-row .bar{margin-top:6px;height:7px}
+  .ring-g{display:flex;align-items:center;gap:18px}
+  .ring-svg{width:108px;height:108px;flex:none}
+  .ring-g .big{font-size:clamp(36px,3.2vw,50px)}
+  .landing{padding:0;overflow:visible;min-height:300px;background:linear-gradient(180deg,rgba(255,255,255,.4),rgba(255,255,255,.85) 75%,rgba(246,238,235,.95))}
+  .landing .card-h{position:absolute;left:20px;right:20px;top:18px;margin:0;z-index:1}
+  .land-fly{position:absolute;left:50%;bottom:46px;width:74px;height:198px;margin-left:-37px;z-index:2;will-change:transform}
+  .landing .pad{bottom:34px}
+  .landing::before{content:"";position:absolute;left:12%;right:12%;bottom:44px;height:1px;background:linear-gradient(90deg,transparent,rgba(122,20,20,.35),transparent)}
+  .restart{border:0;border-radius:var(--r-lg);padding:18px 20px;display:flex;align-items:center;justify-content:center;gap:10px;color:#fff;
+    background:linear-gradient(135deg,var(--red-hi),var(--orange) 45%,var(--cyan));box-shadow:0 18px 36px -16px rgba(230,0,0,.7),inset 0 1px 0 rgba(255,255,255,.3);
+    font:700 11px/1 var(--mono);letter-spacing:.22em;text-transform:uppercase;transition:transform .35s var(--e-out)}
+  .restart:hover{transform:translateY(-3px)}
+
+  /* ---------- trilha da missão (rodapé) ---------- */
+  .nav{position:fixed;inset:auto 0 0 0;height:var(--nav);z-index:6;display:flex;align-items:stretch;gap:18px;padding:0 22px;
+    background:rgba(251,249,248,.78);backdrop-filter:blur(16px) saturate(1.3);-webkit-backdrop-filter:blur(16px) saturate(1.3);border-top:1px solid var(--hair)}
+  .ctl{display:flex;align-items:center;gap:8px}
+  .ctl button{width:42px;height:42px;border-radius:14px;border:1px solid var(--hair);background:#fff;display:grid;place-items:center;font-size:12px;color:var(--text);
+    box-shadow:0 6px 14px -10px rgba(34,26,22,.5);transition:transform .3s var(--e-out)}
+  .ctl button:hover{transform:translateY(-2px)}
+  .ctl #play{width:50px;height:50px;border-radius:16px;border:0;background:linear-gradient(140deg,var(--red-hi),var(--orange) 50%,var(--cyan));color:#fff;box-shadow:0 12px 24px -10px rgba(230,0,0,.75)}
+  .track{position:relative;flex:1;min-width:0}
+  .track svg.path,.done-wrap,#marks,.ship,#trail{pointer-events:none}
+  .track{overflow:hidden}
+  .track svg.path{position:absolute;left:0;top:6px;width:100%;height:52px;overflow:visible}
+  .done-wrap{position:absolute;left:0;top:6px;width:100%;height:52px;overflow:hidden;will-change:transform}
+  .done-wrap svg{position:absolute;left:0;top:0;width:100%;height:100%;overflow:visible;will-change:transform}
+  .tmk{position:absolute;left:0;top:0;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;background:#fff;border:2px solid rgba(122,20,20,.35);transition:background .3s,border-color .3s,transform .3s}
+  .tmk.passed{background:var(--cyan);border-color:var(--cyan)}
+  .tmk.on{background:var(--orange);border-color:#fff;box-shadow:0 0 0 3px var(--orange),0 0 14px rgba(230,0,0,.6);transform:scale(1.15)}
+  .ship{position:absolute;left:0;top:0;width:56px;height:22px;z-index:2;opacity:0;transition:opacity .5s;will-change:transform}
+  .ship.vis{opacity:1}
+  .ship svg{display:block;width:100%;height:100%;overflow:visible}
+  .ship .mfl{transform-box:fill-box;transform-origin:100% 50%;transition:transform .35s}
+  .ship[data-fl="0"] .mfl{transform:scaleX(0)}
+  .ship[data-fl="2"] .mfl{transform:scaleX(1.7)}
+  .ship .mfl-in{transform-box:fill-box;transform-origin:100% 50%;animation:mflk .08s infinite alternate}
+  @keyframes mflk{to{transform:scale(.8,.86)}}
+  #trail{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+  .chapters{position:absolute;left:0;right:0;bottom:8px;display:grid;grid-template-columns:repeat(7,1fr)}
+  .chap{border:0;background:none;padding:6px 2px;text-align:center;min-width:0;color:var(--faint);font:700 10.5px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .3s}
+  .chap b{margin-right:6px}
+  .chap.done{color:var(--cyan)}
+  .chap.on{color:var(--orange)}
+  .chap:hover{color:var(--text)}
+
+  /* ---------- sobreposições das transições ---------- */
+  .ov{position:absolute;pointer-events:none}
+  .ov-rocket{left:50%;bottom:0;width:84px;height:224px}
+  .ov-exhaust{left:-10%;right:-10%;bottom:-30%;height:70%;border-radius:50%;background:radial-gradient(closest-side,rgba(255,176,32,.55),rgba(230,0,0,.25) 55%,transparent);transform-origin:50% 100%}
+  .ov-radar{left:50%;top:45%;width:150vmax;height:150vmax;border-radius:50%;
+    background:conic-gradient(from 0deg,transparent 0deg,rgba(230,0,0,.32) 46deg,rgba(230,0,0,0) 48deg),repeating-radial-gradient(circle,rgba(122,20,20,.14) 0 1px,transparent 1px 70px)}
+  .ov-curtain{top:-50%;bottom:-50%;left:-15%;width:130%;background:linear-gradient(90deg,var(--cyan),var(--orange) 55%,var(--red-hi));
+    box-shadow:0 0 80px rgba(230,0,0,.45)}
+  .ov-curtain::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(255,255,255,.16) 0 2px,transparent 2px 34px)}
+  .ov-speed{inset:0;background:repeating-linear-gradient(0deg,transparent 0 22px,rgba(230,0,0,.18) 22px 23px,transparent 23px 61px)}
+  .ov-seam{left:0;right:0;top:50%;height:3px;background:linear-gradient(90deg,transparent,var(--orange),#fff,var(--orange),transparent);box-shadow:0 0 24px 6px rgba(230,0,0,.45)}
+  .ov-tunnel{left:50%;top:50%;width:140vmax;height:140vmax;border-radius:50%;
+    background:repeating-conic-gradient(from 0deg,rgba(122,20,20,.18) 0deg .6deg,transparent .6deg 7deg);
+    -webkit-mask-image:radial-gradient(circle,transparent 0 8%,#000 30%,transparent 70%);mask-image:radial-gradient(circle,transparent 0 8%,#000 30%,transparent 70%)}
+  .ov-heat{left:50%;top:0;width:120vmax;height:80vmax;border-radius:50%;
+    background:radial-gradient(closest-side,rgba(255,214,120,.85),rgba(255,122,40,.55) 35%,rgba(230,0,0,.25) 60%,transparent)}
+  .ov-fade{inset:0;background:var(--paper-2)}
+
+  /* ---------- responsivo ---------- */
+  @media (max-width:1100px){
+    .bento{grid-template-columns:repeat(6,minmax(0,1fr))}
+    .c-5,.c-7,.c-8,.c-12{grid-column:span 6}
+    .c-3,.c-4{grid-column:span 3}
+    .r-2,.r-3,.r-4{grid-row:auto}
+    .launch{min-height:440px}
+    .dt-grid{grid-template-columns:1fr 1fr}
+    .landing{min-height:280px}
+  }
+  @media (max-width:900px){
+    .mission{display:none}
+    .nodes{grid-template-columns:1fr;gap:14px}
+    .node{flex-direction:row;text-align:left;gap:14px}
+    .node .dot{flex:none}
+    .chap span{display:none}
+  }
+  @media (max-width:700px){
+    :root{--nav:90px;--head:56px}
+    .sc{padding:16px 16px 18px}
+    .bento > *{grid-column:1/-1 !important}
+    .hud{padding:0 14px;gap:10px}
+    .hud .pill{display:none}
+    .brand{font-size:12.5px;letter-spacing:.12em;gap:8px}
+    .brand .mk{width:28px;height:28px}
+    .clockbox{padding:4px}
+    .clockbox b{min-width:0;font-size:12px;padding:6px 9px}
+    .launch{grid-template-columns:1fr;min-height:0}
+    .pad-scene{height:330px}
+    .tele{padding:4px 20px 22px}
+    .upp .big{font-size:56px}
+    .day-row{grid-template-columns:104px 1fr 76px}
+    .rank-row{grid-template-columns:26px 92px 1fr 64px}
+    .tp-row{grid-template-columns:1fr 54px 104px}
+    .nav{padding:0 10px;gap:8px}
+    .ctl #prev,.ctl #next{display:none}
+    .chap b{margin:0}
+    .leitura::before{display:block;width:max-content;margin:0 0 8px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation:none!important;transition:none!important}
+  }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="gNose" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff4a3c"/><stop offset=".55" stop-color="#e60000"/><stop offset="1" stop-color="#8f0f0f"/></linearGradient>
+    <linearGradient id="gBody" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#d5ccc7"/><stop offset=".35" stop-color="#ffffff"/><stop offset=".7" stop-color="#f3eeeb"/><stop offset="1" stop-color="#c9beb8"/></linearGradient>
+    <linearGradient id="gFin" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a51b1b"/><stop offset="1" stop-color="#5a0e0e"/></linearGradient>
+    <linearGradient id="gBell" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#6b5f58"/><stop offset=".5" stop-color="#b7aca6"/><stop offset="1" stop-color="#5a4f49"/></linearGradient>
+    <radialGradient id="gGlass" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#ffffff"/><stop offset=".5" stop-color="#ffd9d4"/><stop offset="1" stop-color="#c94a42"/></radialGradient>
+    <linearGradient id="gFlOut" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff7a1a"/><stop offset=".5" stop-color="#e60000" stop-opacity=".75"/><stop offset="1" stop-color="#e60000" stop-opacity="0"/></linearGradient>
+    <linearGradient id="gFlMid" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd166"/><stop offset=".6" stop-color="#ff8a1a" stop-opacity=".85"/><stop offset="1" stop-color="#ff5a00" stop-opacity="0"/></linearGradient>
+    <radialGradient id="gFGlow"><stop offset="0" stop-color="#ff7a1a" stop-opacity=".55"/><stop offset="1" stop-color="#e60000" stop-opacity="0"/></radialGradient>
+    <radialGradient id="gHeat"><stop offset="0" stop-color="#fff2c4" stop-opacity=".95"/><stop offset=".35" stop-color="#ffb020" stop-opacity=".75"/><stop offset=".7" stop-color="#ff4a1a" stop-opacity=".35"/><stop offset="1" stop-color="#e60000" stop-opacity="0"/></radialGradient>
+    <linearGradient id="gTrack" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ff2d1f"/><stop offset=".5" stop-color="#e60000"/><stop offset="1" stop-color="#7a1414"/></linearGradient>
+  </defs>
+</svg>
+<div class="glow" id="glow" aria-hidden="true"></div>
+<canvas id="stars" aria-hidden="true"></canvas>
+<div class="grid-ov" aria-hidden="true"></div>
+<canvas id="fx" aria-hidden="true"></canvas>
+
+<header class="hud">
+  <div class="brand"><span class="mk">F</span>Falcon <b>Telemetria</b></div>
+  <div class="mission">Missão <em>2026-09</em> · CD Aurora · Aurora Suplementos · setembro de 2026</div>
+  <div class="sp"></div>
+  <span class="pill"><i></i>Dados auditados · <span id="gen"></span></span>
+  <div class="clockbox" id="clockbox" data-state="pre" aria-hidden="true"><i></i><b id="clock">T− 00:03</b></div>
+  <div class="mprog" aria-hidden="true"><i id="mprog"></i></div>
+</header>
+
+<main class="stage" id="stage">
+  <section class="scene" data-name="Ignição" id="s1"></section>
+  <section class="scene" data-name="Trajetória" id="s2"></section>
+  <section class="scene" data-name="Pulso" id="s3"></section>
+  <section class="scene" data-name="Canais" id="s4"></section>
+  <section class="scene" data-name="Tripulação" id="s5"></section>
+  <section class="scene" data-name="Alcance" id="s6"></section>
+  <section class="scene" data-name="Retorno" id="s7"></section>
+</main>
+<div class="tx" id="tx" aria-hidden="true"></div>
+
+<nav class="nav" aria-label="Capítulos">
+  <div class="ctl">
+    <button id="prev" aria-label="Capítulo anterior">◀</button>
+    <button id="play" aria-label="Pausar">❚❚</button>
+    <button id="next" aria-label="Próximo capítulo">▶</button>
+  </div>
+  <div class="track" id="track">
+    <svg class="path" aria-hidden="true"><path id="pathBg" fill="none" stroke="rgba(122,20,20,.28)" stroke-width="1.5" stroke-dasharray="2 6" stroke-linecap="round"/></svg>
+    <div class="done-wrap" id="doneWrap" aria-hidden="true"><svg id="doneIn"><path id="pathDone" fill="none" stroke="url(#gTrack)" stroke-width="3" stroke-linecap="round"/></svg></div>
+    <canvas id="trail" aria-hidden="true"></canvas>
+    <div id="marks" aria-hidden="true"></div>
+    <div class="ship" id="ship" data-fl="1" aria-hidden="true">
+      <svg viewBox="0 0 56 22">
+        <g class="mfl"><g class="mfl-in"><path d="M8,6.5 C2,7.5 -10,9.5 -20,11 C-10,12.5 2,14.5 8,15.5 Z" fill="url(#gFlOut)"/><path d="M8,8.5 C4,9.3 -2,10.3 -8,11 C-2,11.7 4,12.7 8,13.5 Z" fill="#ffd166"/></g></g>
+        <path d="M9,3 L4,-3 L18,5 Z M9,19 L4,25 L18,17 Z" fill="url(#gFin)"/>
+        <path d="M8,6 L38,6 C46,6 52,8.5 55,11 C52,13.5 46,16 38,16 L8,16 Z" fill="url(#gBody)" stroke="rgba(34,26,22,.3)" stroke-width=".6"/>
+        <path d="M38,6 C46,6 52,8.5 55,11 C52,13.5 46,16 38,16 Z" fill="url(#gNose)"/>
+        <rect x="20" y="6" width="3" height="10" fill="#e60000"/>
+        <circle cx="31" cy="11" r="2.6" fill="url(#gGlass)" stroke="#7a1414" stroke-width="1"/>
+      </svg>
+    </div>
+    <div class="chapters" id="chapters"></div>
+  </div>
+</nav>
+<div id="tip" role="status" aria-live="polite"></div>
+
+<script>
+const D = {"gerado":"09/10/2026 11:18","k":{"pedidos":10571,"pedidos_b2b":3451,"pedidos_b2c":7120,"unidades_pedidas":2824060.1,"faturados":10525,"pct_faturados":0.9956,"incompletos":1160,"pct_incompletos":0.1102,"clientes_b2b":2056,"pct_b2b":0.3265,"valor_b2b":131557334.7,"ticket_medio_b2b":38121.5,"ate_dia":30,"ciclo_emissao_romaneio_mediana":1,"clientes_novos":null,"linhas_separadas":46296,"unidades_liberadas":454228,"conferentes":20,"unidades_apontadas":293111,"linhas_apontadas":34185,"conferente_dias":253,"un_por_conferente_dia":1158.5,"tempo_medio_separacao_h":37.9,"unidades_apontadas_b2b":266672,"unidades_apontadas_b2c":26439,"linhas_apontadas_b2b":23540,"linhas_apontadas_b2c":10645,"carretas_transf":90,"unidades_transf":858820.4,"paletes_transf":1511,"nfs_transf":105,"valor_transf":25638313.8,"carretas_fabrica":98,"km_fabrica":7840,"nfs_terceiros":43,"unidades_terceiros":632826,"devol_linhas":447,"devol_unidades":31813,"devol_clientes":66,"taxa_descarte":0.019,"pct_ofensor_logistica":0.2282,"avarias_registros":25,"avarias_unidades":146,"avarias_produtos":13,"movimentacoes":8880,"mov_entradas":1923111,"mov_saidas":8278962,"mov_transf_un":783343,"mov_n_entradas":3131,"mov_n_saidas":3623,"mov_n_transf":1063,"mov_operadores":10,"mov_com_operador":8880,"mov_operador_dias":85,"mov_por_operador_dia":104.5,"inventario_auditorias":27,"inventario_acuracia":0.9867,"despachados_b2b":2279,"transportadoras":11,"prazo_entrega_mediana":6,"cobertura_prazo":0.8219},"dias":["01","02","03","04","05","06","07","08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30"],"pedidos":[598,426,346,408,266,188,224,375,477,356,368,181,159,333,347,368,326,392,220,215,412,421,443,324,332,207,145,352,403,959],"receb":[70716,83132,72222,14040,15160,0,0,49553,107525,72766,83811,17761,0,58309,202869,68586,38670,69358,24714,0,64245,59700,49688,58866,27919,18778,0,12568,78589,72102],"sep":[576,1941,370,2128,272,0,0,11397,11542,6407,6321,0,0,14419,12099,20485,16615,14350,0,0,15268,26565,17128,11940,29026,0,0,19234,16290,38738],"devol":[572,0,0,0,478,0,0,0,13554,83,0,0,0,0,1491,800,0,0,0,0,0,0,0,0,1813,0,0,245,5422,7355],"avar":[0,0,0,0,0,0,0,0,0,39,36,0,0,0,0,71,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"mov":[410,393,424,504,210,0,262,314,282,470,464,0,0,498,356,474,487,490,0,0,406,381,279,276,312,0,0,281,423,484],"canalDia":[[50,526],[160,1781],[0,370],[1730,398],[0,272],[0,0],[0,0],[5193,6204],[10074,1468],[5670,737],[5580,741],[0,0],[0,0],[13262,1157],[11038,1061],[19494,991],[15194,1421],[13139,1211],[0,0],[0,0],[13963,1305],[25372,1193],[16147,981],[11182,758],[28221,805],[0,0],[0,0],[18078,1156],[15143,1147],[37982,756]],"horas":[[7,510],[8,715],[9,875],[10,804],[11,863],[12,573],[13,822],[14,1073],[15,828],[16,596],[17,315],[18,17],[19,339],[20,367],[21,183]],"ufs":[["AC",16,8,null],["AL",130,25,null],["AM",50,27,null],["AP",20,19,null],["BA",696,149,6],["CE",301,52,null],["DF",196,57,8],["ES",263,87,5],["EX",9,9,null],["GO",326,109,8],["MA",161,40,12],["MG",929,252,6],["MS",143,42,6],["MT",220,115,8],["PA",156,67,null],["PB",155,37,null],["PE",438,83,13],["PI",59,17,9],["PR",583,202,6],["RJ",1088,276,5],["RN",156,34,13.5],["RO",26,16,null],["RR",3,0,null],["RS",509,139,10],["SC",433,150,6],["SE",137,36,7],["SP",3276,1341,3],["TO",46,16,null]],"canais":[["B2B","..-Manual",212],["B2B","01-WebServices/DIRETO (ShopLine/E-Rede)",3239],["B2C","09-NETSHOES ANYMARKET",87],["B2C","10-MAGALU ANYMARKET",200],["B2C","12-AMAZON ANYMARKET",114],["B2C","13-VIA VAREJO ANYMARKET",3],["B2C","14-VTEX AURORA SUPLEMENTOS",106],["B2C","16-VTEX AURANUTRI",2],["B2C","17-CARREFOUR ANYMARKET",2],["B2C","18-MERCADO LIVRE ANYMARKET",1569],["B2C","20-SHOPEE",4515],["B2C","21-BANCO_INTER",3],["B2C","31-BELEZA_NA_WEB",5],["B2C","35-",514]],"conf":[["otaviok",39615,17,2330],["paulab",30617,14,2187],["theog",28455,15,1897],["liviap",23211,6,3868],["gaelc",22611,16,1413],["muriloo",21399,14,1528],["tainan",18329,13,1410],["yasminf",15093,11,1372]],"oper":[["Enzo.Ferraz",3082,22,140],["Ravi.moura",2994,23,130],["Samuel.Lacerda",2512,23,109],["Mateus Marques",105,3,35],["Davi Campos Nunes",76,3,25],["Otávio Lima Duarte",65,1,65],["ARTHUR PEIXOTO",27,7,4],["Camila Prado",17,1,17]],"devMot":[["DESACORDO COMERCIAL",308,28677],["ERRO DE SEPARAÇÃO",36,796],["DECURSO DE PRAZO",35,1206],["ACORDO COMERCIAL",25,287],["VALIDADE CURTA",12,162]],"devOf":[["COMERCIAL",338,0.7562],["LOGISTICA",102,0.2282],["TRANSPORTE",7,0.0157]],"avMot":[["AMASSADO",13,57],["VAZANDO",4,32],["FURADO",5,31],["TAMPA QUEBRADA",2,25],["ROTULO DIVERGENTE",1,1]],"transp":[["LOGÍSTICA ALFA LTDA",869,4,819],["LOG\u00cdSTICA SERRA LTDA",666,6,579],["LOGÍSTICA PORTO SEGURO LTDA",243,7,186],["LOGÍSTICA CERRADO LTDA",150,9,72],["LOG\u00cdSTICA DELTA LTDA",112,12,33],["LOGÍSTICA ESTRELA LTDA",107,7,92]],"clientes":[["DROGARIA LITORAL LTDA",65,306479,18277051],["DISTRIBUIDORA DELTA LTDA",45,206239,14476075],["FARMA ZÊNITE LTDA",15,252856,12286777],["EMPÓRIO GAMA LTDA",22,122976,4271942],["DROGARIA BETA LTDA",29,53922,3451175]],"produtos":[["10553 · AU CRUNCH BAR CACAU CROCANTE 12 UNI",57435],["10042 · AU CREATINA ULTRA 300G",38068],["10504 · AU CARNIFORCE SABOR CHOCOLATE 90",16993],["10322 · AU WHEY PREMIUM BAUNILHA 900",16455],["10063 · AU CREATINA 120 CAPS",10939]]};
+const K = D.k;
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const fmt = (n, dec = 0) => Number(n).toLocaleString('pt-BR', {minimumFractionDigits: dec, maximumFractionDigits: dec});
+const pct = (v, dec = 1) => fmt(v * 100, dec) + '%';
+const compact = n => n >= 1e6 ? fmt(n / 1e6, 2) + ' mi' : n >= 1e4 ? fmt(n / 1e3, 1) + ' mil' : fmt(n);
+const money = n => 'R$ ' + (n >= 1e6 ? fmt(n / 1e6, 1) + ' mi' : fmt(n / 1e3, 1) + ' mil');
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const NS = 'http://www.w3.org/2000/svg';
+const WD = ['dom','seg','ter','qua','qui','sex','sáb'];
+const dayInfo = i => { const d = new Date(2026, 8, +D.dias[i]); return {wd: WD[d.getDay()], we: d.getDay() === 0 || d.getDay() === 6, lbl: D.dias[i] + '/09'}; };
+const sum = a => a.reduce((s, v) => s + v, 0);
+const title = s => s.toLowerCase().replace(/(^|\s)(\p{L})/gu, (m, a, b) => a + b.toUpperCase()).replace(/\bLogistica\b/g, 'Logística').replace(/\bRotulo\b/g, 'Rótulo').replace(/\bServicos\b/g, 'Serviços');
+// número com contagem animada ao entrar na cena
+const N = (v, dec = 0, suf = '', pre = '') => `<span data-count="${v}" data-dec="${dec}" data-suf="${suf}" data-pre="${pre}">${pre}${fmt(v, dec)}${suf}</span>`;
+
+function countUp(root){
+  root.querySelectorAll('[data-count]').forEach(el => {
+    const to = +el.dataset.count, dec = +el.dataset.dec, pre = el.dataset.pre, suf = el.dataset.suf;
+    if(reduce){ el.textContent = pre + fmt(to, dec) + suf; return; }
+    const t0 = performance.now(), dur = 1500;
+    (function step(now){
+      const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+      el.textContent = pre + fmt(to * e, dec) + suf;
+      if(k < 1) requestAnimationFrame(step);
+    })(t0);
+  });
+}
+
+/* ============================ movimento: utilitários (só transform e opacity) ============================ */
+const EASE = 'cubic-bezier(.65,0,.35,1)', EOUT = 'cubic-bezier(.16,1,.3,1)', EIN = 'cubic-bezier(.7,0,.84,0)', TD = 820;
+// entrada: preenchimento "backwards" — ao terminar, o elemento volta ao estilo base (estado final), sem prender o transform
+const enterAnim = (el, kf, o) => el.animate(kf, Object.assign({duration: 650, easing: EOUT, fill: 'backwards'}, o));
+function stagger(els, base = 0, step = 60, kf){
+  if(reduce) return;
+  els.forEach((el, k) => enterAnim(el, kf || [{opacity: 0, transform: 'translateY(18px)'}, {opacity: 1, transform: 'none'}], {delay: base + k * step}));
+}
+const growX = (els, base = 0, step = 60) => stagger(els, base, step, [{transform: 'scaleX(0)'}, {transform: 'scaleX(1)'}]);
+const growY = (els, base = 0, step = 50) => stagger(els, base, step, [{transform: 'scaleY(0)'}, {transform: 'scaleY(1)'}]);
+// transição: preenchimento "both" — cancelado ao fim da troca
+const A = (el, kf, o) => el.animate(kf, Object.assign({duration: TD, easing: EASE, fill: 'both'}, o));
+
+/* ============================ foguete em SVG (corpo, janela, aletas, chama, brilho de calor) ============================ */
+const rocketSVG = (id = '') => `<svg class="rk" ${id ? `id="${id}"` : ''} viewBox="0 0 120 320" data-fl="0" data-heat="0">
+  <ellipse class="fglow" cx="60" cy="300" rx="58" ry="16" fill="url(#gFGlow)"/>
+  <g transform="translate(60 262)"><g class="flame-wrap">
+    <path class="fl-a" d="M-19,0 C-17,40 -7,74 0,104 C7,74 17,40 19,0 Z" fill="url(#gFlOut)"/>
+    <path class="fl-b" d="M-12,0 C-11,28 -4,50 0,70 C4,50 11,28 12,0 Z" fill="url(#gFlMid)"/>
+    <path class="fl-c" d="M-6,0 C-5,15 -2,25 0,36 C2,25 5,15 6,0 Z" fill="#fff4c2"/>
+  </g></g>
+  <path d="M36,192 L12,238 L12,256 L36,242 Z M84,192 L108,238 L108,256 L84,242 Z" fill="url(#gFin)"/>
+  <path d="M44,248 L76,248 L82,264 L38,264 Z" fill="url(#gBell)"/>
+  <rect x="36" y="80" width="48" height="166" rx="7" fill="url(#gBody)" stroke="rgba(34,26,22,.28)" stroke-width=".8"/>
+  <path d="M60,6 C77,24 85,50 85,82 L35,82 C35,50 43,24 60,6 Z" fill="url(#gNose)"/>
+  <path d="M60,10 C66,20 70,34 72,50" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="2.4" stroke-linecap="round"/>
+  <rect x="36" y="150" width="48" height="8" fill="#e60000"/>
+  <rect x="36" y="206" width="48" height="4" fill="#7a1414"/>
+  <rect x="44" y="96" width="5" height="138" rx="2.5" fill="rgba(255,255,255,.7)"/>
+  <circle cx="60" cy="118" r="12" fill="url(#gGlass)" stroke="#7a1414" stroke-width="3.5"/>
+  <circle cx="56" cy="114" r="3.2" fill="rgba(255,255,255,.85)"/>
+  <rect x="57" y="210" width="6" height="44" rx="3" fill="#7a1414"/>
+  <g class="heat"><circle class="heat-in" cx="60" cy="34" r="54" fill="url(#gHeat)"/>
+    <path d="M22,78 Q60,-20 98,78" fill="none" stroke="#ffb020" stroke-width="3" stroke-opacity=".7" stroke-linecap="round"/></g>
+  <rect class="nz" x="59" y="263" width="2" height="2" fill="none"/>
+</svg>`;
+
+/* ============================ números derivados ============================ */
+const RECEB = Math.round(K.unidades_transf + K.unidades_terceiros);
+const B2B_UN = K.unidades_apontadas_b2b / K.unidades_apontadas;
+const UN_PED_B2B = K.unidades_apontadas_b2b / K.pedidos_b2b, UN_PED_B2C = K.unidades_apontadas_b2c / K.pedidos_b2c;
+
+/* ============================ 01 · ignição ============================ */
+$('#s1').innerHTML = `<div class="sc">
+  <div class="bento b1">
+    <div class="card hero c-7">
+      <div class="eyebrow">Cap. 01 <span>· Ignição</span></div>
+      <div class="hero-n">${N(K.pedidos)}</div>
+      <div class="hero-l">pedidos lançados em setembro de 2026</div>
+    </div>
+    <div class="card launch c-5 r-4" id="launch" aria-hidden="true">
+      <div class="pad-scene" id="padScene"><div class="contrail"></div><div class="tower"></div><div class="pad" id="pad1"></div>
+        <div class="rk-fly" id="rkFly">${rocketSVG('rkBig')}</div><div class="cd" id="cd"></div></div>
+      <ul class="tele">
+        ${[
+          ['Coifa · Faturamento', pct(K.pct_faturados) + ' faturados'],
+          ['Estágio 2 · Conferência', compact(K.unidades_apontadas) + ' un apontadas'],
+          ['Interestágio · Separação', compact(K.linhas_separadas) + ' linhas'],
+          ['Estágio 1 · Recebimento', compact(RECEB) + ' un recebidas'],
+          ['Motores · Equipe', `${K.conferentes} conferentes · ${K.mov_operadores} operadores`],
+        ].map(l => `<li><span>${l[0].toUpperCase()}</span><b>${l[1]}</b></li>`).join('')}
+      </ul>
+    </div>
+    ${[
+      ['Faturados', N(K.pct_faturados * 100, 1, '%'), `${fmt(K.faturados)} de ${fmt(K.pedidos)} pedidos`, K.pct_faturados],
+      ['Unidades apontadas', N(K.unidades_apontadas), `${pct(B2B_UN, 0)} B2B · ${fmt(K.linhas_apontadas)} linhas`, B2B_UN],
+      ['Unidades recebidas', N(RECEB), `${pct(K.unidades_transf / RECEB, 0)} por transferência · ${K.carretas_transf} carretas`, K.unidades_transf / RECEB],
+      ['Acurácia do inventário', N(K.inventario_acuracia * 100, 1, '%'), `${K.inventario_auditorias} auditorias no mês`, K.inventario_acuracia],
+    ].map((r, i) => `<div class="card kpi ${['c-4', 'c-3', 'c-3', 'c-4'][i]}"><div class="lbl">${r[0]}</div><div class="big">${r[1]}</div><div class="sub">${r[2]}</div><div class="bar"><i style="width:${(r[3] * 100).toFixed(1)}%"></i></div></div>`).join('')}
+    <div class="card ticker c-7">
+      <span><b>${money(K.valor_b2b)}</b> em pedidos B2B</span>
+      <span><b>${fmt(K.clientes_b2b)}</b> clientes B2B</span>
+      <span>ticket médio <b>${money(K.ticket_medio_b2b)}</b></span>
+      <span>emissão → romaneio <b>${K.ciclo_emissao_romaneio_mediana} dia</b> (mediana)</span>
+    </div>
+  </div>
+  <p class="leitura">Setembro fechou com <b>${fmt(K.pedidos)} pedidos</b> e ${pct(K.pct_faturados)} faturados — só ${fmt(K.pedidos - K.faturados)} ficaram sem nota. O ponto de atenção é a completude: <b>${fmt(K.incompletos)} pedidos (${pct(K.pct_incompletos)})</b> saíram incompletos.</p>
+</div>`;
+
+/* ============================ 02 · trajetória ============================ */
+const transf = D.transp[0];
+const STAGES = [
+  {n:'Recebimento', v:compact(RECEB), u:'un recebidas', m:[['Carretas de transferência', fmt(K.carretas_transf)], ['Paletes transferidos', fmt(K.paletes_transf)], ['Valor transferido', money(K.valor_transf)], ['NFs de terceiros', `${K.nfs_terceiros} · ${compact(K.unidades_terceiros)} un`]],
+    t:`<b>${pct(K.unidades_transf / RECEB)}</b> do volume veio por transferência da fábrica — ${compact(K.unidades_transf)} un em ${K.carretas_transf} carretas, média de <b>${fmt(K.unidades_transf / K.carretas_transf)} un por carreta</b>. Terceiros somaram ${compact(K.unidades_terceiros)} un em ${K.nfs_terceiros} NFs.`},
+  {n:'Armazenagem', v:fmt(K.movimentacoes), u:'movimentações', m:[['Entradas', fmt(K.mov_n_entradas)], ['Saídas', fmt(K.mov_n_saidas)], ['Transferências', fmt(K.mov_n_transf)], ['Por operador-dia', fmt(K.mov_por_operador_dia)]],
+    t:`${K.mov_operadores} operadores fizeram ${fmt(K.movimentacoes)} movimentações em ${K.mov_operador_dias} operador-dias: <b>${fmt(K.mov_por_operador_dia)} por operador-dia</b>. Saídas (${fmt(K.mov_n_saidas)}) superaram entradas (${fmt(K.mov_n_entradas)}). Acurácia do inventário: <b>${pct(K.inventario_acuracia)}</b>.`},
+  {n:'Separação', v:compact(K.linhas_separadas), u:'linhas separadas', m:[['Unidades liberadas', fmt(K.unidades_liberadas)], ['Linhas separadas', fmt(K.linhas_separadas)], ['Tempo médio', fmt(K.tempo_medio_separacao_h, 1) + ' h'], ['Un por linha', fmt(K.unidades_liberadas / K.linhas_separadas, 1)]],
+    t:`${fmt(K.linhas_separadas)} linhas e ${fmt(K.unidades_liberadas)} unidades liberadas. O tempo médio entre a geração da separação e a conclusão foi de <b>${fmt(K.tempo_medio_separacao_h, 1)} h</b> — mais de um turno e meio por item.`},
+  {n:'Conferência', v:compact(K.unidades_apontadas), u:'un apontadas', m:[['Conferentes', fmt(K.conferentes)], ['Conferente-dias', fmt(K.conferente_dias)], ['Un por conferente-dia', fmt(K.un_por_conferente_dia)], ['Linhas apontadas', fmt(K.linhas_apontadas)]],
+    t:`${K.conferentes} conferentes apontaram ${fmt(K.unidades_apontadas)} un em ${K.conferente_dias} conferente-dias: <b>${fmt(K.un_por_conferente_dia)} un por conferente-dia</b>. ${pct(B2B_UN)} das unidades conferidas são B2B.`},
+  {n:'Faturamento', v:pct(K.pct_faturados), u:'pedidos faturados', m:[['Pedidos emitidos', fmt(K.pedidos)], ['Faturados', fmt(K.faturados)], ['Incompletos', `${fmt(K.incompletos)} · ${pct(K.pct_incompletos)}`], ['Emissão → romaneio', K.ciclo_emissao_romaneio_mediana + ' dia']],
+    t:`${fmt(K.faturados)} de ${fmt(K.pedidos)} pedidos faturados, com mediana de <b>${K.ciclo_emissao_romaneio_mediana} dia</b> entre emissão e romaneio. Faturar não é o gargalo; a completude é: <b>${pct(K.pct_incompletos)}</b> dos pedidos saíram incompletos.`},
+  {n:'Transporte', v:K.prazo_entrega_mediana + ' dias', u:'prazo mediano de entrega', m:[['Transportadoras', fmt(K.transportadoras)], ['Despachados B2B', fmt(K.despachados_b2b)], ['Com prazo apurado', pct(K.cobertura_prazo)], ['Maior transportadora', `${title(transf[0].split(' ')[0])} · ${transf[2]} d`]],
+    t:`${K.transportadoras} transportadoras e prazo mediano de <b>${K.prazo_entrega_mediana} dias</b>, apurado para ${pct(K.cobertura_prazo)} dos pedidos. A maior, ${title(transf[0].split(' ')[0])} (${fmt(transf[1])} pedidos), entrega em <b>${transf[2]} dias</b> na mediana.`},
+  {n:'Retorno', v:compact(K.devol_unidades), u:'un devolvidas', ret:true, m:[['Linhas devolvidas', fmt(K.devol_linhas)], ['Clientes', fmt(K.devol_clientes)], ['Ofensor logística', pct(K.pct_ofensor_logistica)], ['Taxa de descarte', pct(K.taxa_descarte)]],
+    t:`${fmt(K.devol_linhas)} linhas devolvidas (${fmt(K.devol_unidades)} un) por ${K.devol_clientes} clientes. <b>${pct(D.devOf[0][2])}</b> têm origem comercial; a parcela logística é de ${pct(K.pct_ofensor_logistica)}.`},
+];
+$('#s2').innerHTML = `<div class="sc">
+  <div class="sc-head"><div class="eyebrow">Cap. 02 <span>· Trajetória</span></div>
+    <h2>Do caminhão ao cliente<small>A operação como uma trajetória de sete estágios. Clique em um estágio para abrir a telemetria dele.</small></h2></div>
+  <div class="card flow" id="flow">
+    <canvas id="flowCv"></canvas>
+    <div class="nodes">${STAGES.map((s, i) => `<button class="node${s.ret ? ' ret' : ''}" data-i="${i}" aria-label="${s.n}: ${s.v} ${s.u}"><span class="dot">${String(i + 1).padStart(2, '0')}</span><span><span class="nm">${s.n}</span><br><span class="nv">${s.v}</span><br><span class="nu">${s.u}</span></span></button>`).join('')}</div>
+  </div>
+  <div class="bento detail" id="detail"></div>
+</div>`;
+let selStage = 0;
+function showStage(i, animate){
+  selStage = i; const s = STAGES[i];
+  $$('#s2 .node').forEach((n, k) => n.classList.toggle('sel', k === i));
+  $('#detail').innerHTML = `<div class="card dt-h c-4"><div><div class="lbl">Estágio ${String(i + 1).padStart(2, '0')}</div><div class="dt-name">${s.n}</div></div><div class="sub"><b class="dv">${s.v}</b> ${s.u}</div></div>
+    <div class="card dt-m c-8"><div class="dt-grid">${s.m.map(m => `<div><div class="lbl">${m[0]}</div><div class="v">${m[1]}</div></div>`).join('')}</div><div class="dt-txt">${s.t}</div></div>`;
+  if(animate){ stagger($$('#detail > .card'), 0, 70); stagger($$('#detail .dt-grid > div'), 120, 50); }
+}
+$$('#s2 .node').forEach(n => n.addEventListener('click', () => { showStage(+n.dataset.i, true); setPlaying(false); }));
+showStage(0);
+
+// partículas ao longo do caminho que liga os estágios
+const flow = {cv: $('#flowCv'), pts: [], segL: [], L: 0, parts: []};
+function layoutFlow(){
+  const box = $('#flow').getBoundingClientRect(), dpr = Math.min(2, devicePixelRatio || 1);
+  if(!box.width) return;
+  flow.cv.width = box.width * dpr; flow.cv.height = box.height * dpr; flow.dpr = dpr;
+  flow.pts = $$('#s2 .dot').map(d => { const r = d.getBoundingClientRect(); return [r.left + r.width / 2 - box.left, r.top + r.height / 2 - box.top]; });
+  flow.segL = flow.pts.slice(1).map((p, i) => Math.hypot(p[0] - flow.pts[i][0], p[1] - flow.pts[i][1]));
+  flow.L = sum(flow.segL);
+  if(!flow.parts.length) flow.parts = Array.from({length: 90}, () => ({s: Math.random(), v: .05 + Math.random() * .05, r: .7 + Math.random() * 1.1}));
+}
+function flowAt(u){
+  let d = u * flow.L, i = 0;
+  while(i < flow.segL.length - 1 && d > flow.segL[i]){ d -= flow.segL[i]; i++; }
+  const a = flow.pts[i], b = flow.pts[i + 1], t = flow.segL[i] ? d / flow.segL[i] : 0;
+  return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, i];
+}
+function drawFlow(dt){
+  const c = flow.cv.getContext('2d'), p = flow.pts; if(p.length < 2) return;
+  c.setTransform(flow.dpr, 0, 0, flow.dpr, 0, 0); c.clearRect(0, 0, flow.cv.width, flow.cv.height);
+  c.lineWidth = 1.2; c.lineCap = 'round';
+  for(let i = 0; i < p.length - 1; i++){
+    c.strokeStyle = i === p.length - 2 ? 'rgba(185,28,28,.30)' : (i === selStage || i + 1 === selStage) ? 'rgba(230,0,0,.6)' : 'rgba(122,20,20,.18)';
+    c.setLineDash(i === selStage || i + 1 === selStage ? [] : [2, 5]);
+    c.beginPath(); c.moveTo(p[i][0], p[i][1]); c.lineTo(p[i + 1][0], p[i + 1][1]); c.stroke();
+  }
+  c.setLineDash([]);
+  const cols = ['230,0,0', '122,20,20', '185,28,28'];
+  for(let k = 0; k < 3; k++){
+    c.fillStyle = `rgba(${cols[k]},.9)`; c.beginPath();
+    flow.parts.forEach(q => {
+      if(k === 0) q.s = (q.s + q.v * dt / 1000) % 1;
+      const [x, y, seg] = flowAt(q.s), ck = seg === p.length - 2 ? 2 : seg < 2 ? 0 : 1;
+      if(ck === k){ c.moveTo(x + q.r, y); c.arc(x, y, q.r, 0, 6.3); }
+    });
+    c.fill();
+  }
+}
+new ResizeObserver(layoutFlow).observe($('#flow'));
+
+/* ============================ 03 · pulso ============================ */
+const maxP = Math.max(...D.pedidos), maxS = Math.max(...D.sep);
+const DAYROWS = [
+  ['Pedidos emitidos', D.pedidos, 'var(--orange)'], ['Unidades recebidas', D.receb, 'var(--cyan)'], ['Unidades apontadas', D.sep, 'var(--cyan)'],
+  ['Movimentações', D.mov, 'var(--cyan)'], ['Unidades devolvidas', D.devol, 'var(--red)'], ['Avarias (un)', D.avar, 'var(--red)'],
+];
+const pulseSvg = (() => {
+  const C = 260, R0 = 132, RI = 120;
+  let s = `<svg viewBox="-30 -30 580 580" role="img" aria-label="Relógio radial dos 30 dias de setembro: pedidos emitidos por dia em laranja, unidades apontadas em ciano">
+    <circle cx="${C}" cy="${C}" r="248" fill="none" stroke="rgba(122,20,20,.10)"/>
+    <circle cx="${C}" cy="${C}" r="${R0 - 6}" fill="none" stroke="rgba(122,20,20,.18)" stroke-dasharray="1.5 4"/>
+    <circle cx="${C}" cy="${C}" r="70" fill="rgba(255,255,255,.92)" stroke="rgba(122,20,20,.14)"/>`;
+  D.pedidos.forEach((v, i) => {
+    const a = (i * 12 + 6) * Math.PI / 180, sx = Math.sin(a), cy = -Math.cos(a), we = dayInfo(i).we ? ' we' : '';
+    const lo = 104 * v / maxP, li = 44 * D.sep[i] / maxS;
+    s += `<g transform="rotate(${i * 12 + 6} ${C} ${C})"><line class="spoke-o${we}" x1="${C}" y1="${C - R0}" x2="${C}" y2="${(C - R0 - lo).toFixed(2)}"/><line class="spoke-c${we}" x1="${C}" y1="${C - RI}" x2="${C}" y2="${(C - RI + li).toFixed(2)}"/></g>`;
+    s += `<text class="dlab" id="dl${i}" x="${C + sx * 262}" y="${C + cy * 262}">${D.dias[i]}</text>`;
+    const a0 = i * 12 * Math.PI / 180, a1 = (i + 1) * 12 * Math.PI / 180;
+    s += `<path class="hit" data-i="${i}" d="M${C + Math.sin(a0) * 72},${C - Math.cos(a0) * 72} L${C + Math.sin(a0) * 256},${C - Math.cos(a0) * 256} A256,256 0 0 1 ${C + Math.sin(a1) * 256},${C - Math.cos(a1) * 256} L${C + Math.sin(a1) * 72},${C - Math.cos(a1) * 72} A72,72 0 0 0 ${C + Math.sin(a0) * 72},${C - Math.cos(a0) * 72} Z"/>`;
+  });
+  s += `<text id="cWd" x="${C}" y="${C - 22}" text-anchor="middle" style="font:700 11px var(--mono);letter-spacing:.2em;fill:#6b5f58">—</text>
+    <text id="cDt" x="${C}" y="${C + 10}" text-anchor="middle" style="font:800 34px var(--display);fill:#221a16">—</text>
+    <text id="cPd" x="${C}" y="${C + 34}" text-anchor="middle" style="font:700 11px var(--mono);fill:#e60000">—</text></svg>`;
+  return s;
+})();
+const wdP = [], weP = [];
+D.pedidos.forEach((v, i) => (dayInfo(i).we ? weP : wdP).push(v));
+const peakI = D.pedidos.indexOf(maxP), avgWd = sum(wdP) / wdP.length, avgWe = sum(weP) / weP.length;
+const sepPeakI = D.sep.indexOf(maxS);
+$('#s3').innerHTML = `<div class="sc">
+  <div class="sc-head"><div class="eyebrow">Cap. 03 <span>· Pulso</span></div>
+    <h2>30 dias em órbita<small>Cada raio é um dia de setembro. Passe o mouse sobre o relógio ou arraste a régua para ler a telemetria do dia.</small></h2></div>
+  <div class="bento">
+    <div class="card pulse-card c-7"><div class="pulse-wrap" id="pulseWrap">${pulseSvg}<div class="radar" id="sweep"></div></div></div>
+    <div class="card c-5">
+      <div class="card-h"><span class="lbl">Telemetria do dia</span><b id="dayTag">—</b></div>
+      <div class="day-list">${DAYROWS.map((r, k) => `<div class="day-row"><span class="lbl">${r[0]}</span><div class="bar"><i id="db${k}" style="background:${r[2]}"></i></div><span class="val" id="dv${k}">—</span></div>`).join('')}</div>
+      <div class="scrub"><span class="lbl">01</span><input type="range" id="scrub" min="0" max="${D.dias.length - 1}" value="0" aria-label="Dia de setembro"><span class="lbl">${D.dias[D.dias.length - 1]}</span></div>
+      <div class="legend"><span><i style="background:var(--orange)"></i>pedidos (externo)</span><span><i style="background:var(--cyan)"></i>unidades apontadas (interno)</span><span><i style="background:var(--muted);opacity:.5"></i>fim de semana</span></div>
+    </div>
+  </div>
+  <p class="leitura">Pico de pedidos em <b>${dayInfo(peakI).wd} ${dayInfo(peakI).lbl} (${fmt(maxP)})</b>. Dias úteis têm média de <b>${fmt(avgWd)}</b> pedidos contra ${fmt(avgWe)} nos fins de semana. A conferência teve o maior dia em ${dayInfo(sepPeakI).wd} ${dayInfo(sepPeakI).lbl}, com ${fmt(maxS)} un apontadas.</p>
+</div>`;
+let day = 0;
+function setDay(i){
+  day = i; const di = dayInfo(i);
+  $('#sweep').style.transform = `rotate(${i * 12}deg)`;
+  $('#cWd').textContent = di.wd.toUpperCase() + (di.we ? ' · FIM DE SEMANA' : '');
+  $('#cDt').textContent = di.lbl; $('#cPd').textContent = fmt(D.pedidos[i]) + ' PEDIDOS';
+  $('#dayTag').textContent = `${di.wd} ${di.lbl}`;
+  DAYROWS.forEach((r, k) => { const mx = Math.max(...r[1]) || 1; $('#db' + k).style.transform = `scaleX(${(r[1][i] / mx).toFixed(4)})`; $('#dv' + k).textContent = fmt(r[1][i]); });
+  $$('#s3 .dlab').forEach((t, k) => t.classList.toggle('on', k === i));
+  $('#scrub').value = i;
+}
+$$('#s3 .hit').forEach(h => h.addEventListener('pointerenter', () => { setDay(+h.dataset.i); setPlaying(false); }));
+$('#scrub').addEventListener('input', e => { setDay(+e.target.value); setPlaying(false); });
+setDay(0);
+
+/* ============================ 04 · canais ============================ */
+const b2c = D.canais.filter(c => c[0] === 'B2C').map(c => [c[1].replace(/^\d+-/, '').replace(/ ANYMARKET/, '').replace('_', ' ').trim() || 'Canal 35', c[2]]);
+const small = b2c.filter(c => c[1] < 50), SATS = b2c.filter(c => c[1] >= 50).sort((a, b) => b[1] - a[1]).map(c => [/^Canal/.test(c[0]) ? c[0] : title(c[0]), c[1]]);
+if(small.length) SATS.push([`Outros (${small.length})`, sum(small.map(c => c[1]))]);
+const RINGS = [150, 205, 248];
+const PH = [1.2, 4.3, 0, 2.1, 4.2, 1, 3.1, 5.2];
+SATS.forEach((s, i) => { s.ring = RINGS[i < 2 ? 0 : i < 5 ? 1 : 2]; s.ph = PH[i] ?? i; s.sp = (s.ring === 150 ? .12 : s.ring === 205 ? -.08 : .06); s.r = 5 + 29 * Math.sqrt(s[1] / SATS[0][1]); });
+const b2bWeb = D.canais.find(c => c[0] === 'B2B' && /Web/i.test(c[1])), b2bMan = D.canais.find(c => c[0] === 'B2B' && /Manual/i.test(c[1]));
+const maxCli = Math.max(...D.clientes.map(c => c[3]));
+const splitRow = (lbl, a, b, fa, fb) => `<div class="split"><div class="row"><span>${lbl}</span><span>B2B ${fa} · B2C ${fb}</span></div>
+  <div class="track"><i class="b2b" style="width:${(a / (a + b) * 100).toFixed(2)}%">${a / (a + b) >= .14 ? 'B2B ' + pct(a / (a + b), 0) : ''}</i><i class="b2c" style="width:${(b / (a + b) * 100).toFixed(2)}%">${b / (a + b) >= .14 ? 'B2C ' + pct(b / (a + b), 0) : ''}</i></div></div>`;
+// órbita em HTML: cada braço gira no compositor (transform) e o satélite contra-gira para o rótulo ficar de pé
+const orbitSat = (s, i) => {
+  const T = 2 * Math.PI / Math.abs(s.sp), ph = ((s.ph % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+  const dl = s.sp > 0 ? -(ph / (2 * Math.PI)) * T : -(1 - ph / (2 * Math.PI)) * T;
+  const deg = (ph * 180 / Math.PI).toFixed(1);
+  return `<div class="arm" style="--T:${T.toFixed(2)}s;--dl:${dl.toFixed(2)}s;--dir:${s.sp > 0 ? 'normal' : 'reverse'};transform:rotate(${deg}deg)"><div class="sat" style="--R:${(s.ring / 560 * 100).toFixed(2)}%;--d:${(s.r * 2 / 560 * 100).toFixed(2)}%" data-tip="${esc(s[0])} · ${fmt(s[1])} pedidos · ${pct(s[1] / K.pedidos_b2c)} do B2C"><div class="sat-in" style="--cdir:${s.sp > 0 ? 'reverse' : 'normal'};transform:rotate(-${deg}deg)"><i style="--o:${i ? .72 : 1}"></i><span>${esc(s[0])}<small>${fmt(s[1])}</small></span></div></div></div>`;
+};
+$('#s4').innerHTML = `<div class="sc">
+  <div class="sc-head"><div class="eyebrow">Cap. 04 <span>· Canais</span></div>
+    <h2>Dois motores, dois perfis<small>B2C domina em pedidos; B2B domina em volume. As órbitas mostram os marketplaces do B2C, com área proporcional aos pedidos.</small></h2></div>
+  <div class="bento">
+    <div class="card c-7">
+      ${splitRow('Pedidos emitidos', K.pedidos_b2b, K.pedidos_b2c, fmt(K.pedidos_b2b), fmt(K.pedidos_b2c))}
+      ${splitRow('Linhas apontadas', K.linhas_apontadas_b2b, K.linhas_apontadas_b2c, fmt(K.linhas_apontadas_b2b), fmt(K.linhas_apontadas_b2c))}
+      ${splitRow('Unidades apontadas', K.unidades_apontadas_b2b, K.unidades_apontadas_b2c, compact(K.unidades_apontadas_b2b), compact(K.unidades_apontadas_b2c))}
+      <div class="upp">
+        <div><div class="lbl">Un por pedido · B2B</div><div class="big t-bordo">${N(UN_PED_B2B, 1)}</div><div class="sub">${fmt(b2bWeb[2])} via WebServices · ${fmt(b2bMan[2])} manuais</div></div>
+        <div><div class="lbl">Un por pedido · B2C</div><div class="big t-red">${N(UN_PED_B2C, 1)}</div><div class="sub">${fmt(SATS[0][1])} só na ${SATS[0][0]}</div></div>
+      </div>
+    </div>
+    <div class="card orbit c-5 r-2">
+      <div class="orb" id="orbit" role="img" aria-label="Órbita dos canais B2C">
+        ${RINGS.map(r => `<span class="ring" style="--s:${(r * 2 / 560 * 100).toFixed(2)}%"></span>`).join('')}
+        <div class="core"><span>B2C</span> <b>${fmt(K.pedidos_b2c)}</b></div>
+        ${SATS.map(orbitSat).join('')}
+      </div>
+    </div>
+    <div class="card c-7">
+      <div class="card-h"><span class="lbl">Top clientes B2B · valor</span><b>${D.clientes.length}</b></div>
+      <table class="cl"><thead><tr><th>Cliente</th><th class="r">Pedidos</th><th class="r">Unidades</th><th>Valor</th></tr></thead><tbody>
+      ${D.clientes.map(c => `<tr><td>${esc(title(c[0]).replace(/ (Ltda|Sa)\.?$/i, '').replace(/\.$/, ''))}</td><td class="r">${fmt(c[1])}</td><td class="r">${compact(c[2])}</td><td><div class="cellbar"><i style="width:${(c[3] / maxCli * 100).toFixed(2)}%"></i><span>${money(c[3])}</span></div></td></tr>`).join('')}
+      </tbody></table>
+    </div>
+  </div>
+  <p class="leitura">B2C responde por <b>${pct(K.pedidos_b2c / K.pedidos)} dos pedidos</b> mas só ${pct(1 - B2B_UN)} das unidades apontadas: são <b>${fmt(UN_PED_B2C, 1)} un por pedido</b>, contra ${fmt(UN_PED_B2B)} no B2B. ${SATS[0][0]} sozinha soma ${pct(SATS[0][1] / K.pedidos_b2c)} do B2C.</p>
+</div>`;
+
+/* ============================ 05 · tripulação ============================ */
+const peakH = D.horas.reduce((a, b) => b[1] > a[1] ? b : a), maxH = peakH[1];
+const confTop = [...D.conf].sort((a, b) => b[1] - a[1])[0], confRate = [...D.conf].sort((a, b) => b[3] - a[3])[0];
+$('#s5').innerHTML = `<div class="sc">
+  <div class="sc-head"><div class="eyebrow">Cap. 05 <span>· Tripulação</span></div>
+    <h2>Quem move a operação<small>Ranking dos conferentes e operadores do mês, e o perfil de movimentações ao longo do dia.</small></h2></div>
+  <div class="bento">
+    <div class="card c-5 r-2">
+      <div class="card-h"><span class="lbl">Conferentes · unidades apontadas</span>
+        <span class="seg" role="group" aria-label="Métrica"><button aria-pressed="true" data-m="1">Total</button><button aria-pressed="false" data-m="3">Por dia</button></span></div>
+      <div class="rank" id="confRank"></div>
+    </div>
+    <div class="card c-7">
+      <div class="card-h"><span class="lbl">Movimentações por hora</span><b>pico ${peakH[0]}h · ${fmt(maxH)}</b></div>
+      <div class="eq">${D.horas.map(h => `<div class="b${h === peakH ? ' pk' : ''}" data-tip="${h[0]}h · ${fmt(h[1])} movimentações">${h === peakH ? `<em>${fmt(h[1])}</em>` : ''}<i style="height:${(h[1] / maxH * 86).toFixed(2)}%"></i><span>${h[0]}</span></div>`).join('')}</div>
+    </div>
+    <div class="card c-7">
+      <div class="card-h"><span class="lbl">Operadores · movimentações</span><b>${K.mov_operadores} no mês</b></div>
+      <div class="rank" id="opRank"></div>
+    </div>
+  </div>
+  <p class="leitura"><b>${confTop[0]}</b> lidera no total (${fmt(confTop[1])} un em ${confTop[2]} dias), mas o maior ritmo é de <b>${confRate[0]}: ${fmt(confRate[3])} un/dia</b> em ${confRate[2]} dias. As movimentações sobem até o pico das ${peakH[0]}h (${fmt(maxH)}), com queda no almoço (12h: ${fmt(D.horas.find(h => h[0] === 12)[1])}).</p>
+</div>`;
+function rank(el, rows, col, d0 = 0){
+  const sorted = [...rows].sort((a, b) => b[col] - a[col]), mx = sorted[0][col];
+  el.innerHTML = sorted.map((r, i) => `<div class="rank-row${i ? '' : ' top'}"><span class="p">#${i + 1}</span><span class="nm" title="${esc(r[0])}">${esc(r[0])}</span><span class="tr"><i style="width:${(r[col] / mx * 100).toFixed(2)}%"></i></span><span class="q">${fmt(r[col])}</span></div>`).join('');
+  growX($$('.tr i', el), d0, 60);
+}
+let confCol = 1;
+rank($('#confRank'), D.conf, confCol); rank($('#opRank'), D.oper, 1);
+$$('#s5 .seg button').forEach(b => b.addEventListener('click', () => {
+  confCol = +b.dataset.m; $$('#s5 .seg button').forEach(x => x.setAttribute('aria-pressed', x === b)); rank($('#confRank'), D.conf, confCol); setPlaying(false);
+}));
+
+/* ============================ 06 · alcance ============================ */
+const POS = {RR:[1,0],AP:[3,0],AM:[1,1],PA:[2,1],MA:[3,1],CE:[4,1],RN:[5,1],AC:[0,2],RO:[1,2],TO:[2,2],PI:[3,2],PE:[4,2],PB:[5,2],
+  MT:[1,3],GO:[2,3],BA:[3,3],SE:[4,3],AL:[5,3],MS:[1,4],DF:[2,4],MG:[3,4],ES:[4,4],PR:[1,5],SP:[2,5],RJ:[3,5],SC:[1,6],RS:[1,7],EX:[5,7]};
+const UF = Object.fromEntries(D.ufs.map(u => [u[0], u]));
+const maxUf = Math.max(...D.ufs.map(u => u[1])), totUf = sum(D.ufs.map(u => u[1]));
+const hot = [...D.ufs].sort((a, b) => b[1] - a[1]).slice(0, 3).map(u => u[0]);
+const slowUf = D.ufs.filter(u => u[1] >= 200 && u[3] != null).sort((a, b) => b[3] - a[3])[0];
+const cells = [];
+for(let r = 0; r < 8; r++) for(let c = 0; c < 6; c++){
+  const uf = Object.keys(POS).find(k => POS[k][0] === c && POS[k][1] === r), u = uf && UF[uf];
+  const al = u ? .06 + .84 * Math.log(1 + u[1]) / Math.log(1 + maxUf) : 0;
+  cells.push(u ? `<button class="tile${hot.includes(uf) ? ' hot' : ''}" data-uf="${uf}" style="--a:${al.toFixed(2)};color:${al > .55 ? '#fff' : 'var(--text)'}" data-tip="${uf} · ${fmt(u[1])} pedidos · prazo ${u[3] ?? '—'} d"><b>${uf}</b><small>${compact(u[1])}</small></button>` : '<span></span>');
+}
+const maxPz = Math.max(...D.transp.map(t => t[2]));
+const pzCol = d => d <= 5 ? 'var(--green)' : d <= 8 ? 'var(--amber)' : 'var(--red)';
+$('#s6').innerHTML = `<div class="sc">
+  <div class="sc-head"><div class="eyebrow">Cap. 06 <span>· Alcance</span></div>
+    <h2>Para onde a carga voa<small>Mapa em blocos dos estados atendidos: o brilho cresce com o número de pedidos. Clique em um estado para ver o prazo de entrega.</small></h2></div>
+  <div class="bento">
+    <div class="card c-5 r-2"><div class="card-h"><span class="lbl">Pedidos por UF</span><b>${D.ufs.length} destinos</b></div><div class="tiles">${cells.join('')}</div></div>
+    <div class="card c-7" id="ufDet"></div>
+    <div class="card c-7">
+      <div class="card-h"><span class="lbl">Transportadoras · prazo mediano</span><b>dias</b></div>
+      ${D.transp.map(t => `<div class="tp-row"><span class="nm" title="${esc(t[0])}">${esc(title(t[0]).replace(/ (Ltda|Ltda\.)$/i, ''))}</span><span class="lbl" style="text-align:right">${fmt(t[1])} ped.</span><span class="pz"><i style="width:${(t[2] / maxPz * 84).toFixed(1)}px;background:${pzCol(t[2])}"></i>${t[2]} d</span></div>`).join('')}
+    </div>
+  </div>
+  <p class="leitura"><b>SP</b> concentra ${pct(UF.SP[1] / totUf)} dos pedidos (${fmt(UF.SP[1])}) e tem prazo mediano de <b>${UF.SP[3]} dias</b>. O prazo mais longo entre os estados com 200+ pedidos é <b>${slowUf[0]}: ${slowUf[3]} dias</b>.</p>
+</div>`;
+function showUf(uf, animate){
+  const u = UF[uf]; $$('#s6 .tile').forEach(t => t.classList.toggle('sel', t.dataset.uf === uf));
+  $('#ufDet').innerHTML = `<div class="card-h"><span class="lbl">Destino selecionado</span><b>${pct(u[1] / totUf)} do total</b></div><div class="uf-big">${uf === 'EX' ? 'EX · Exterior' : uf}</div>
+    <div class="uf-m"><div><div class="lbl">Pedidos</div><div class="v">${fmt(u[1])}</div></div><div><div class="lbl">Pedidos B2B</div><div class="v">${fmt(u[2])}</div></div>
+    <div><div class="lbl">Prazo mediano</div><div class="v" style="color:${u[3] == null ? 'var(--muted)' : pzCol(u[3])}">${u[3] == null ? '—' : u[3] + ' dias'}</div></div></div>`;
+  if(animate){ stagger([$('#ufDet .uf-big')], 0, 0); stagger($$('#ufDet .uf-m > div'), 80, 60); }
+}
+$$('#s6 .tile').forEach(t => t.addEventListener('click', () => { showUf(t.dataset.uf, true); setPlaying(false); }));
+showUf('SP');
+
+/* ============================ 07 · retorno ============================ */
+const ofCol = ['var(--orange)', 'var(--cyan)', '#4a4a4a'];
+const maxDm = Math.max(...D.devMot.map(m => m[1])), maxAv = Math.max(...D.avMot.map(m => m[2]));
+const ringArc = (v, col) => { const L = 2 * Math.PI * 46; return `<svg class="ring-svg" viewBox="0 0 120 120"><circle cx="60" cy="60" r="46" fill="none" stroke="rgba(34,26,22,.07)" stroke-width="9"/>
+  <circle cx="60" cy="60" r="46" fill="none" stroke="${col}" stroke-width="9" stroke-linecap="round" transform="rotate(-90 60 60)" stroke-dasharray="${L.toFixed(1)}" stroke-dashoffset="${(L * (1 - v)).toFixed(1)}"/></svg>`; };
+$('#s7').innerHTML = `<div class="sc">
+  <div class="sc-head"><div class="eyebrow">Cap. 07 <span>· Retorno</span></div>
+    <h2>O que volta para a base<small>Devoluções, avarias e pedidos incompletos: onde a missão perde unidades.</small></h2></div>
+  <div class="bento">
+    <div class="card devol c-5 r-3">
+      <div class="card-h"><span class="lbl">Devoluções</span><b>${fmt(K.devol_clientes)} clientes</b></div>
+      <div class="big t-red">${N(K.devol_unidades)} <span class="lbl">un</span></div><div class="sub">${fmt(K.devol_linhas)} linhas devolvidas · taxa de descarte ${pct(K.taxa_descarte)}</div>
+      <div class="stack">${D.devOf.map((o, i) => `<i style="width:${(o[2] * 100).toFixed(2)}%;background:${ofCol[i]}" data-tip="${title(o[0])} · ${fmt(o[1])} linhas · ${pct(o[2])}"></i>`).join('')}</div>
+      <div class="keyl">${D.devOf.map((o, i) => `<div><span><i style="background:${ofCol[i]}"></i>${title(o[0])}</span><b>${pct(o[2])}</b></div>`).join('')}</div>
+      <div class="mot">${D.devMot.map(m => `<div class="mot-row"><div>${title(m[0])}<div class="bar"><i style="width:${(m[1] / maxDm * 100).toFixed(2)}%"></i></div></div><span class="lbl" style="text-align:right">${fmt(m[1])} lin.</span></div>`).join('')}</div>
+    </div>
+    <div class="card c-4">
+      <div class="card-h"><span class="lbl">Avarias</span><b>${fmt(K.avarias_produtos)} produtos</b></div>
+      <div class="big t-red">${N(K.avarias_unidades)} <span class="lbl">un</span></div><div class="sub">${fmt(K.avarias_registros)} registros no mês</div>
+      <div class="mot">${D.avMot.map(m => `<div class="mot-row"><div>${title(m[0])}<div class="bar"><i style="width:${(m[2] / maxAv * 100).toFixed(2)}%;background:linear-gradient(90deg,var(--red),var(--orange))"></i></div></div><span class="lbl" style="text-align:right">${fmt(m[2])} un</span></div>`).join('')}</div>
+    </div>
+    <div class="card landing c-3 r-2" aria-hidden="true">
+      <div class="pad" id="pad7"></div><div class="land-fly" id="landFly">${rocketSVG('rkLand')}</div>
+    </div>
+    <div class="card c-4"><div class="card-h"><span class="lbl">Pedidos incompletos</span></div>
+      <div class="ring-g">${ringArc(K.pct_incompletos, 'var(--amber)')}<div><div class="big">${N(K.pct_incompletos * 100, 1, '%')}</div><div class="sub">${fmt(K.incompletos)} de ${fmt(K.faturados)} faturados</div></div></div></div>
+    <div class="card c-4"><div class="card-h"><span class="lbl">Ofensor logística</span></div>
+      <div class="ring-g">${ringArc(K.pct_ofensor_logistica, 'var(--cyan)')}<div><div class="big">${N(K.pct_ofensor_logistica * 100, 1, '%')}</div><div class="sub">${fmt(D.devOf.find(o => /LOG/.test(o[0]))[1])} linhas · a parte que a operação controla</div></div></div></div>
+    <button class="restart c-3" id="restart">↺ Reiniciar missão</button>
+  </div>
+  <p class="leitura"><b>${pct(D.devOf[0][2], 0)} das linhas devolvidas</b> têm origem comercial — ${title(D.devMot[0][0]).toLowerCase()} lidera com ${fmt(D.devMot[0][1])} linhas. Erro de separação são ${fmt((D.devMot.find(m => /SEPARA/.test(m[0])) || [0, 0])[1])} linhas: pequeno, mas é o motivo que a expedição controla diretamente. Avarias somam só ${fmt(K.avarias_unidades)} un no mês.</p>
+</div>`;
+$('#restart').addEventListener('click', () => { go(0, 1); setPlaying(true); });
+
+/* ============================ relógio da missão (T− / T+) ============================ */
+const clk = {state: 'pre', ms: 0, cd: 3, shown: ''};
+function drawClock(){
+  const s = Math.floor(clk.ms / 1000);
+  const txt = clk.state === 'pre' ? `T− 00:0${clk.cd}` : `T+ ${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+  const key = txt + clk.state;
+  if(key === clk.shown) return;
+  clk.shown = key; $('#clock').textContent = txt; $('#clockbox').dataset.state = clk.state;
+}
+
+/* ============================ partículas: fumaça, rastro, poeira ============================ */
+const fxc = $('#fx'), fx = fxc.getContext('2d'), P = [];
+let fxDirty = false;
+function sizeFx(){ const dpr = Math.min(2, devicePixelRatio || 1); fxc.width = innerWidth * dpr; fxc.height = innerHeight * dpr; fx.setTransform(dpr, 0, 0, dpr, 0, 0); }
+function puff(x, y, o){ if(P.length < 420) P.push(Object.assign({x, y, vx: 0, vy: 0, r: 3, g: 14, life: 1.2, age: 0, c: '120,108,100', a: .3}, o)); }
+const rnd = (a, b) => a + Math.random() * (b - a);
+function drawFx(dt){
+  if(!P.length){ if(fxDirty){ fx.clearRect(0, 0, innerWidth, innerHeight); fxDirty = false; } return; }
+  fx.clearRect(0, 0, innerWidth, innerHeight); fxDirty = true;
+  const s = dt / 1000;
+  for(let i = P.length - 1; i >= 0; i--){
+    const p = P[i]; p.age += s;
+    if(p.age >= p.life){ P.splice(i, 1); continue; }
+    p.x += p.vx * s; p.y += p.vy * s; p.vx *= .985; p.vy *= .985; p.r += p.g * s;
+    fx.fillStyle = `rgba(${p.c},${(p.a * (1 - p.age / p.life)).toFixed(3)})`;
+    fx.beginPath(); fx.arc(p.x, p.y, p.r, 0, 6.3); fx.fill();
+  }
+}
+const rectOf = sel => { const e = $(sel); return e ? e.getBoundingClientRect() : null; };
+function padSmoke(sel, n, big){
+  const r = rectOf(sel); if(!r || !r.width) return;
+  for(let k = 0; k < n; k++){
+    const side = Math.random() < .5 ? -1 : 1;
+    puff(r.left + r.width / 2 + rnd(-10, 10), r.top - 4, {vx: side * rnd(30, big ? 180 : 70), vy: rnd(-40, -6), r: rnd(4, 9), g: rnd(14, 34), life: rnd(1, 2.2), c: Math.random() < .5 ? '150,138,130' : '205,196,190', a: rnd(.18, .34)});
+  }
+}
+function nozzleTrail(sel, n){
+  const r = rectOf(sel); if(!r) return;
+  const x = r.left + r.width / 2, y = r.top + r.height / 2;
+  for(let k = 0; k < n; k++){
+    puff(x + rnd(-6, 6), y + rnd(20, 60), {vx: rnd(-14, 14), vy: rnd(20, 70), r: rnd(2.5, 6), g: rnd(8, 18), life: rnd(.8, 1.4), c: Math.random() < .35 ? '255,138,40' : '186,176,170', a: rnd(.1, .22)});
+  }
+}
+function dust(sel){
+  const r = rectOf(sel); if(!r) return;
+  for(let k = 0; k < 46; k++){
+    const side = k % 2 ? 1 : -1;
+    puff(r.left + r.width / 2 + side * rnd(0, 24), r.top + rnd(-2, 4), {vx: side * rnd(40, 210), vy: rnd(-46, -4), r: rnd(2.5, 6), g: rnd(10, 22), life: rnd(.8, 1.7), c: Math.random() < .5 ? '196,176,160' : '150,136,126', a: rnd(.22, .4)});
+  }
+}
+
+/* ============================ ignição: contagem, tremor, decolagem ============================ */
+const SEQ = {timers: [], fly: null, land: null, smoke: 0, trail: false};
+const later = (fn, ms) => SEQ.timers.push(setTimeout(fn, ms));
+const clearSeq = () => { SEQ.timers.forEach(clearTimeout); SEQ.timers = []; SEQ.smoke = 0; SEQ.trail = false; };
+function shake(){ $('#stage').animate([{transform: 'translate(0,0)'}, {transform: 'translate(-2px,1px)'}, {transform: 'translate(2px,-1px)'}, {transform: 'translate(-1px,-2px)'}, {transform: 'translate(2px,1px)'}, {transform: 'translate(-2px,0)'}, {transform: 'translate(0,0)'}], {duration: 120, iterations: 6}); }
+function ignite(){
+  clearSeq(); if(SEQ.fly){ SEQ.fly.cancel(); SEQ.fly = null; }
+  const rk = $('#rkBig'), cd = $('#cd');
+  $('#launch').classList.remove('launched'); rk.dataset.fl = '0';
+  clk.state = 'pre'; clk.ms = 0; clk.cd = 3; ship.vis = false; ship.landed = 0;
+  if(reduce){ clk.state = 'flight'; ship.vis = true; return; }
+  [3, 2, 1].forEach((n, k) => later(() => {
+    clk.cd = n; cd.textContent = n;
+    cd.animate([{opacity: 0, transform: 'scale(1.7)'}, {opacity: 1, transform: 'scale(1)', offset: .25}, {opacity: 1, transform: 'scale(.94)', offset: .75}, {opacity: 0, transform: 'scale(.7)'}], {duration: 620, easing: EOUT});
+    if(n === 2) rk.dataset.fl = '1';
+    if(n === 1){ rk.dataset.fl = '2'; SEQ.smoke = 1; }
+  }, 250 + k * 650));
+  later(() => { clk.cd = 0; rk.dataset.fl = '3'; SEQ.smoke = 2; shake(); }, 250 + 3 * 650);
+  later(liftoff, 250 + 4 * 650);
+}
+function liftoff(){
+  $('#cd').textContent = ''; clk.state = 'flight'; SEQ.smoke = 0; SEQ.trail = true; warp(1, .55);
+  SEQ.fly = $('#rkFly').animate([{transform: 'translateY(0)'}, {transform: 'translateY(-30px)', offset: .18}, {transform: 'translateY(-130vh)'}], {duration: 2000, easing: 'cubic-bezier(.55,0,.9,.4)', fill: 'forwards'});
+  SEQ.fly.onfinish = () => { SEQ.trail = false; $('#launch').classList.add('launched'); ship.vis = true; };
+}
+function backToPad(){ // ao voltar (◀) para a Ignição: o foguete desce de volta ao pad
+  clearSeq(); clk.state = 'hold';
+  const rk = $('#rkBig');
+  if(SEQ.fly){ SEQ.fly.cancel(); SEQ.fly = null; }
+  $('#launch').classList.remove('launched');
+  if(reduce){ rk.dataset.fl = '0'; return; }
+  rk.dataset.fl = '2';
+  $('#rkFly').animate([{transform: 'translateY(-110vh)'}, {transform: 'translateY(0)'}], {duration: 1500, easing: 'cubic-bezier(.12,.8,.3,1)'}).onfinish = () => { rk.dataset.fl = '0'; padSmoke('#pad1', 18, false); };
+}
+
+/* ============================ retorno: reentrada e pouso ============================ */
+function landing(){
+  clearSeq(); if(SEQ.land){ SEQ.land.cancel(); SEQ.land = null; }
+  const rk = $('#rkLand');
+  if(reduce){ rk.dataset.fl = '0'; rk.dataset.heat = '0'; clk.state = 'landed'; ship.landed = 1; return; }
+  rk.dataset.heat = '1'; rk.dataset.fl = '0';
+  SEQ.land = $('#landFly').animate([
+    {transform: 'translateY(-560px) rotate(10deg)'}, {transform: 'translateY(-150px) rotate(-3deg)', offset: .55},
+    {transform: 'translateY(-26px) rotate(1deg)', offset: .84}, {transform: 'translateY(0) rotate(0deg)'}], {duration: 2400, easing: 'cubic-bezier(.22,.9,.3,1)', fill: 'backwards'});
+  later(() => { rk.dataset.heat = '0'; }, 1000);
+  later(() => { rk.dataset.fl = '2'; }, 1150);
+  later(() => { dust('#pad7'); rk.dataset.fl = '0'; clk.state = 'landed'; ship.landed = 1; }, 2400);
+}
+
+/* ============================ fundo: estrelas em 3 camadas, parallax e warp ============================ */
+const sc = $('#stars'), sx = sc.getContext('2d');
+const LAYERS = [{f: .5, r: .7, v: 6, a: .16, p: 6, len: 40, c: '122,20,20'}, {f: .32, r: 1.1, v: 14, a: .22, p: 14, len: 90, c: '34,26,22'}, {f: .18, r: 1.7, v: 28, a: .30, p: 28, len: 170, c: '230,0,0'}];
+let stars = [], mx = 0, my = 0, pmx = 0, pmy = 0;
+const W = {w: 0, dir: 1, t0: -1, amp: 1, dur: 1150};
+function warp(dir, amp = 1){ if(reduce) return; W.dir = dir; W.amp = amp; W.t0 = performance.now(); }
+function sizeStars(){
+  const dpr = Math.min(2, devicePixelRatio || 1); sc.width = innerWidth * dpr; sc.height = innerHeight * dpr; sx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const n = Math.round(innerWidth * innerHeight / (document.body.classList.contains('lite') ? 9000 : 5200));
+  stars = LAYERS.map(L => Array.from({length: Math.round(n * L.f)}, () => ({x: Math.random() * innerWidth, y: Math.random() * innerHeight})));
+  sizeFx(); layoutTrack();
+}
+let starAcc = 0, starTick = 0;
+function drawStars(dt, now){
+  starAcc += dt; if(W.t0 < 0 && (++starTick & 1)) return; dt = starAcc; starAcc = 0;
+  if(W.t0 >= 0){ const k = (now - W.t0) / W.dur; W.w = k >= 1 ? 0 : Math.pow(Math.sin(Math.PI * k), 1.4) * W.amp; if(k >= 1) W.t0 = -1; }
+  pmx += (mx - pmx) * .06; pmy += (my - pmy) * .06;
+  sx.clearRect(0, 0, innerWidth, innerHeight);
+  const s = dt / 1000, warping = W.w > .03;
+  LAYERS.forEach((L, li) => {
+    const v = L.v * (1 + W.w * 30) * s * W.dir, ox = pmx * L.p, oy = pmy * L.p * .6;
+    sx.beginPath();
+    if(warping){ sx.strokeStyle = `rgba(${L.c},${(L.a + W.w * .15).toFixed(3)})`; sx.lineWidth = L.r; }
+    else sx.fillStyle = `rgba(${L.c},${L.a})`;
+    for(const p of stars[li]){
+      p.y += v; if(p.y > innerHeight + 10) { p.y -= innerHeight + 20; p.x = Math.random() * innerWidth; } else if(p.y < -10){ p.y += innerHeight + 20; p.x = Math.random() * innerWidth; }
+      const x = p.x + ox, y = p.y + oy;
+      if(warping){ sx.moveTo(x, y); sx.lineTo(x, y - W.dir * L.len * W.w); }
+      else { sx.moveTo(x + L.r, y); sx.arc(x, y, L.r, 0, 6.3); }
+    }
+    warping ? sx.stroke() : sx.fill();
+  });
+}
+addEventListener('pointermove', e => { mx = e.clientX / innerWidth - .5; my = e.clientY / innerHeight - .5; });
+// brilho de fundo muda de posição a cada capítulo
+const GLOW = [[.68, .55], [.18, .3], [.36, .52], [.78, .34], [.5, .16], [.22, .72], [.72, .8]];
+function moveGlow(i){ const g = $('#glow'), m = Math.max(innerWidth, innerHeight) * 1.2; g.style.transform = `translate(${(GLOW[i][0] * innerWidth - m / 2).toFixed(0)}px,${(GLOW[i][1] * innerHeight - m / 2).toFixed(0)}px)`; }
+
+/* ============================ trilha da missão no rodapé (mini nave) ============================ */
+const scenes = $$('.scene'), DUR = [10000, 13000, 16000, 12000, 12000, 12000, 13000];
+$('#chapters').innerHTML = scenes.map((s, i) => `<button class="chap" data-i="${i}"><b>${String(i + 1).padStart(2, '0')}</b><span>${s.dataset.name}</span></button>`).join('');
+$('#marks').innerHTML = scenes.map(() => '<i class="tmk"></i>').join('');
+const chaps = $$('.chap'), marks = $$('#marks .tmk');
+const ship = {u: 0, from: 0, to: 0, t0: -1, dur: 980, vis: false, landed: 0, lr: 0, el: $('#ship')};
+const TR = {W: 0, x0: 0, x1: 0, base: 40, amp: 22};
+const trackY = u => TR.base - TR.amp * Math.sin(Math.PI * u);
+const trackX = u => TR.x0 + u * (TR.x1 - TR.x0);
+function layoutTrack(){
+  const W = $('#track').getBoundingClientRect().width; if(!W) return;
+  TR.W = W; TR.x0 = W / 14; TR.x1 = W - W / 14;
+  let d = ''; for(let k = 0; k <= 64; k++){ const u = k / 64; d += (k ? 'L' : 'M') + trackX(u).toFixed(1) + ',' + trackY(u).toFixed(1); }
+  $('#pathBg').setAttribute('d', d); $('#pathDone').setAttribute('d', d);
+  marks.forEach((m, i) => { m.style.left = trackX(i / 6) + 'px'; m.style.top = (6 + trackY(i / 6)) + 'px'; });
+  const tc = $('#trail'), dpr = Math.min(2, devicePixelRatio || 1), r = $('#track').getBoundingClientRect();
+  tc.width = r.width * dpr; tc.height = r.height * dpr; trail.dpr = dpr;
+}
+function shipTo(i){ const to = i / 6; if(reduce){ ship.u = to; ship.t0 = -1; return; } ship.from = ship.u; ship.to = to; ship.t0 = performance.now(); }
+const trail = {P: [], dpr: 1, ctx: $('#trail').getContext('2d'), dirty: false};
+function drawShip(now, dt){
+  let u, tilt = 0, speed = 0;
+  if(ship.t0 >= 0){
+    const k = Math.min(1, (now - ship.t0) / ship.dur), e = k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+    const dir = Math.sign(ship.to - ship.from) || 1;
+    u = ship.from + (ship.to - ship.from) * e;
+    tilt = -16 * dir * Math.sin(Math.PI * Math.min(1, k * 1.15)) + (k > .82 ? Math.sin((k - .82) * 52) * 5 * (1 - k) * 5.5 : 0);
+    speed = Math.abs(ship.to - ship.from) * (k < .5 ? 12 * k * k : 12 * Math.pow(1 - k, 2)) * 6;
+    if(k >= 1) ship.t0 = -1;
+  } else u = cur / 6 + (cur < 6 && !busy ? Math.min(1, elapsed / DUR[cur]) * (1 / 6) * .3 : 0);
+  ship.u = u;
+  const x = trackX(u), y = 6 + trackY(u), slope = -TR.amp * Math.PI * Math.cos(Math.PI * u) / ((TR.x1 - TR.x0) || 1);
+  ship.lr += ((ship.landed ? 1 : 0) - ship.lr) * Math.min(1, dt / 260);
+  const ang = (Math.atan2(slope, 1) * 180 / Math.PI + tilt) * (1 - ship.lr) - 90 * ship.lr;
+  ship.el.style.transform = `translate(${(x - 28).toFixed(1)}px,${(y - 11).toFixed(1)}px) rotate(${ang.toFixed(2)}deg)`;
+  ship.el.classList.toggle('vis', ship.vis);
+  ship.el.dataset.fl = ship.landed ? '0' : speed > .05 ? '2' : '1';
+  const done = Math.max(0, TR.W - x);
+  $('#doneWrap').style.transform = `translateX(${-done.toFixed(1)}px)`; $('#doneIn').style.transform = `translateX(${done.toFixed(1)}px)`;
+  // rastro de partículas atrás da nave
+  const c = trail.ctx, s = dt / 1000;
+  if(ship.vis && !ship.landed && !reduce){
+    const n = speed > .05 ? 4 : Math.random() < .35 ? 1 : 0, ar = ang * Math.PI / 180;
+    for(let k = 0; k < n; k++) if(trail.P.length < 160) trail.P.push({x: x - Math.cos(ar) * 24, y: y - Math.sin(ar) * 24, vx: -Math.cos(ar) * rnd(20, 60) + rnd(-8, 8), vy: -Math.sin(ar) * rnd(20, 60) + rnd(-8, 8), age: 0, life: rnd(.5, 1.1), r: rnd(1.2, 2.8), c: Math.random() < .5 ? '230,0,0' : '160,148,140'});
+  }
+  if(trail.P.length || trail.dirty){
+    c.setTransform(trail.dpr, 0, 0, trail.dpr, 0, 0); c.clearRect(0, 0, TR.W, 120); trail.dirty = trail.P.length > 0;
+    for(let i = trail.P.length - 1; i >= 0; i--){
+      const p = trail.P[i]; p.age += s; if(p.age >= p.life){ trail.P.splice(i, 1); continue; }
+      p.x += p.vx * s; p.y += p.vy * s; p.r += 3 * s;
+      c.fillStyle = `rgba(${p.c},${(.45 * (1 - p.age / p.life)).toFixed(3)})`; c.beginPath(); c.arc(p.x, p.y, p.r, 0, 6.3); c.fill();
+    }
+  }
+}
+function markChapters(){
+  chaps.forEach((b, k) => { b.classList.toggle('on', k === cur); b.classList.toggle('done', k < cur); b.setAttribute('aria-current', k === cur ? 'step' : 'false'); });
+  marks.forEach((m, k) => { m.classList.toggle('on', k === cur); m.classList.toggle('passed', k < cur); });
+}
+
+/* ============================ entrada de cada capítulo (cascata) ============================ */
+const ENTER = [
+  dir => { const c = $$('#s1 .bento > .card'); stagger(c, 60, 70); growX($$('#s1 .kpi .bar i'), 500, 80); dir === 1 ? ignite() : backToPad(); },
+  () => { stagger($$('#s2 .sc-head, #s2 .flow, #s2 .detail > .card'), 0, 70); stagger($$('#s2 .node'), 160, 60, [{opacity: 0, transform: 'translateY(16px) scale(.9)'}, {opacity: 1, transform: 'none'}]); stagger($$('#detail .dt-grid > div'), 420, 60); requestAnimationFrame(layoutFlow); setTimeout(layoutFlow, 700); },
+  () => { stagger($$('#s3 .sc-head, #s3 .bento > .card'), 0, 70); growY($$('#s3 .spoke-o'), 200, 40); growY($$('#s3 .spoke-c'), 260, 40); stagger($$('#s3 .day-row'), 260, 60, [{opacity: 0, transform: 'translateX(14px)'}, {opacity: 1, transform: 'none'}]); },
+  () => { stagger($$('#s4 .sc-head, #s4 .bento > .card'), 0, 70); growX($$('#s4 .split .track i'), 260, 80); growX($$('#s4 .cellbar i'), 420, 60); stagger($$('#s4 .sat'), 300, 70, [{opacity: 0}, {opacity: 1}]); },
+  () => { stagger($$('#s5 .sc-head, #s5 .bento > .card'), 0, 70); rank($('#confRank'), D.conf, confCol, 260); rank($('#opRank'), D.oper, 1, 420); growY($$('#s5 .eq .b i'), 260, 50); },
+  () => { stagger($$('#s6 .sc-head, #s6 .bento > .card'), 0, 70); stagger($$('#s6 .tile'), 160, 40, [{opacity: 0, transform: 'scale(.6)'}, {opacity: 1, transform: 'none'}]); growX($$('#s6 .tp-row .pz i'), 420, 60); },
+  () => { stagger($$('#s7 .sc-head, #s7 .bento > *'), 0, 70); growX($$('#s7 .stack i'), 320, 160); growX($$('#s7 .mot .bar i'), 420, 60);
+    stagger($$('#s7 .ring-svg'), 380, 120, [{opacity: 0, transform: 'rotate(-140deg) scale(.8)'}, {opacity: 1, transform: 'none'}]); landing(); },
+];
+const LEAVE = [
+  (to, dir) => { clearSeq(); if(clk.state === 'pre' || clk.state === 'hold'){ clk.state = 'flight'; ship.vis = true; if(!SEQ.fly){ SEQ.fly = $('#rkFly').animate([{transform: 'translateY(-130vh)'}, {transform: 'translateY(-130vh)'}], {duration: 1, fill: 'forwards'}); } $('#launch').classList.add('launched'); } },
+  null, null, null, null, null,
+  (to, dir) => { clearSeq(); ship.landed = 0; if(dir === -1) clk.state = 'flight'; },
+];
+function enterScene(i, dir){ const s = scenes[i]; countUp(s); if(ENTER[i]) ENTER[i](dir); }
+
+/* ============================ transições temáticas entre capítulos ============================ */
+const tx = $('#tx');
+function ov(cls, html = ''){ const d = document.createElement('div'); d.className = 'ov ' + cls; d.innerHTML = html; tx.appendChild(d); return d; }
+function cloneScene(s, clip){
+  const c = s.cloneNode(true); c.classList.add('clone', 'active'); c.classList.remove('tr'); c.removeAttribute('id'); c.inert = true; c.setAttribute('aria-hidden', 'true');
+  $$('[id]', c).forEach(e => e.removeAttribute('id')); if(clip) c.style.clipPath = clip;
+  $('#stage').appendChild(c); c.scrollTop = s.scrollTop; return c;
+}
+// cada função recebe (sai, entra, direção); ao voltar, a mesma função toca ao contrário com os papéis trocados
+const TX = [
+  // Ignição → Trajetória: decolagem
+  (o, n, dir) => { o.style.zIndex = 1; n.style.zIndex = 2; const r = ov('ov-rocket', rocketSVG()); r.firstChild.dataset.fl = '3'; const ex = ov('ov-exhaust');
+    return [A(o, [{transform: 'translateY(0)', opacity: 1, easing: 'cubic-bezier(.55,0,.8,.2)'}, {transform: 'translateY(-70%)', opacity: 0, offset: .6}, {transform: 'translateY(-105%)', opacity: 0}], {direction: dir, easing: 'linear'}),
+      A(n, [{transform: 'translateY(100%)', opacity: 0, easing: 'cubic-bezier(.3,0,.6,1)'}, {transform: 'translateY(55%)', opacity: 1, offset: .32, easing: EOUT}, {transform: 'translateY(0)', opacity: 1}], {direction: dir, easing: 'linear'}),
+      A(r, [{transform: 'translate(-50%,40vh)'}, {transform: 'translate(-50%,-120vh)'}], {direction: dir, easing: EIN}),
+      A(ex, [{opacity: 0, transform: 'scale(.6)'}, {opacity: .9, transform: 'scale(1)', offset: .35}, {opacity: 0, transform: 'scale(1.5)'}], {direction: dir})]; },
+  // Trajetória → Pulso: varredura de radar
+  (o, n, dir) => { o.style.zIndex = 1; n.style.zIndex = 2; const rd = ov('ov-radar');
+    return [A(n, [{clipPath: 'circle(0% at 50% 45%)'}, {clipPath: 'circle(80% at 50% 45%)'}], {direction: dir}),
+      A(o, [{opacity: 1, transform: 'scale(1)'}, {opacity: 0, transform: 'scale(.96)'}], {direction: dir}),
+      A(rd, [{opacity: 0, transform: 'translate(-50%,-50%) rotate(0deg) scale(.25)'}, {opacity: 1, transform: 'translate(-50%,-50%) rotate(220deg) scale(1)', offset: .6}, {opacity: 0, transform: 'translate(-50%,-50%) rotate(340deg) scale(1.2)'}], {direction: dir, easing: 'linear'})]; },
+  // Pulso → Canais: cortina diagonal com linhas de velocidade
+  (o, n, dir) => { const cu = ov('ov-curtain'), sl = ov('ov-speed');
+    return [A(cu, [{transform: 'translateX(-140%) skewX(-16deg)', easing: EIN}, {transform: 'translateX(0) skewX(-16deg)', offset: .5, easing: EOUT}, {transform: 'translateX(140%) skewX(-16deg)'}], {direction: dir, duration: 860, easing: 'linear'}),
+      A(sl, [{opacity: 0, transform: 'translateX(-30%)'}, {opacity: 1, transform: 'translateX(0)', offset: .5}, {opacity: 0, transform: 'translateX(30%)'}], {direction: dir, duration: 860, easing: 'linear'}),
+      A(o, [{opacity: 1, transform: 'translateX(0)'}, {opacity: 1, transform: 'translateX(-4%)', offset: .5}, {opacity: 0, transform: 'translateX(-4%)', offset: .5001}, {opacity: 0, transform: 'translateX(-4%)'}], {direction: dir, duration: 860, easing: 'linear'}),
+      A(n, [{opacity: 0, transform: 'translateX(6%)'}, {opacity: 0, transform: 'translateX(6%)', offset: .5}, {opacity: 1, transform: 'translateX(3%)', offset: .5001, easing: EOUT}, {opacity: 1, transform: 'translateX(0)'}], {direction: dir, duration: 860, easing: 'linear'})]; },
+  // Canais → Tripulação: separação de estágio
+  (o, n, dir) => { const top = cloneScene(o, 'inset(0 0 50% 0)'), bot = cloneScene(o, 'inset(50% 0 0 0)'), seam = ov('ov-seam');
+    top.style.zIndex = bot.style.zIndex = 3; n.style.zIndex = 1;
+    return [A(o, [{opacity: 0}, {opacity: 0}], {direction: dir}),
+      A(top, [{transform: 'translateY(0) rotate(0deg)', opacity: 1, easing: EOUT}, {transform: 'translateY(-2%) rotate(0deg)', opacity: 1, offset: .22, easing: 'cubic-bezier(.5,0,.75,0)'}, {transform: 'translateY(-58%) rotate(-2.5deg)', opacity: 0}], {direction: dir, easing: 'linear'}),
+      A(bot, [{transform: 'translateY(0) rotate(0deg)', opacity: 1, easing: EOUT}, {transform: 'translateY(2%) rotate(0deg)', opacity: 1, offset: .22, easing: 'cubic-bezier(.5,0,.75,0)'}, {transform: 'translateY(58%) rotate(2.5deg)', opacity: 0}], {direction: dir, easing: 'linear'}),
+      A(seam, [{opacity: 0, transform: 'translateY(-50%) scaleX(0)'}, {opacity: 1, transform: 'translateY(-50%) scaleX(1)', offset: .2}, {opacity: 0, transform: 'translateY(-50%) scaleX(1)', offset: .55}, {opacity: 0, transform: 'translateY(-50%) scaleX(1)'}], {direction: dir, easing: 'linear'}),
+      A(n, [{opacity: 0, transform: 'scale(.93)'}, {opacity: 0, transform: 'scale(.93)', offset: .3, easing: EOUT}, {opacity: 1, transform: 'scale(1)'}], {direction: dir, easing: 'linear'})]; },
+  // Tripulação → Alcance: zoom de aproximação
+  (o, n, dir) => { o.style.zIndex = 2; n.style.zIndex = 1; const tu = ov('ov-tunnel');
+    return [A(o, [{transform: 'scale(1)', opacity: 1}, {transform: 'scale(1.85)', opacity: 0}], {direction: dir, easing: EIN}),
+      A(n, [{transform: 'scale(.6)', opacity: 0}, {transform: 'scale(.6)', opacity: 0, offset: .2, easing: EOUT}, {transform: 'scale(1)', opacity: 1}], {direction: dir, easing: 'linear'}),
+      A(tu, [{opacity: 0, transform: 'translate(-50%,-50%) scale(.4) rotate(0deg)'}, {opacity: .9, transform: 'translate(-50%,-50%) scale(1.2) rotate(10deg)', offset: .45}, {opacity: 0, transform: 'translate(-50%,-50%) scale(2.4) rotate(20deg)'}], {direction: dir, easing: 'linear'})]; },
+  // Alcance → Retorno: desfoque de movimento e brilho de reentrada
+  (o, n, dir) => { const g1 = cloneScene(o), g2 = cloneScene(o), heat = ov('ov-heat');
+    o.style.zIndex = 3; g1.style.zIndex = g2.style.zIndex = 2; n.style.zIndex = 1;
+    return [A(o, [{transform: 'translateY(0)', opacity: 1, easing: 'cubic-bezier(.5,0,.75,0)'}, {transform: 'translateY(-38%)', opacity: 0, offset: .55}, {transform: 'translateY(-38%)', opacity: 0}], {direction: dir, easing: 'linear'}),
+      A(g1, [{transform: 'translateY(0)', opacity: 0, easing: 'ease-in'}, {transform: 'translateY(-11%)', opacity: .3, offset: .3, easing: 'ease-out'}, {transform: 'translateY(-30%)', opacity: 0, offset: .6}, {transform: 'translateY(-30%)', opacity: 0}], {direction: dir, easing: 'linear'}),
+      A(g2, [{transform: 'translateY(0)', opacity: 0, easing: 'ease-in'}, {transform: 'translateY(-5%)', opacity: .16, offset: .3, easing: 'ease-out'}, {transform: 'translateY(-22%)', opacity: 0, offset: .6}, {transform: 'translateY(-22%)', opacity: 0}], {direction: dir, easing: 'linear'}),
+      A(n, [{transform: 'translateY(26%)', opacity: 0}, {transform: 'translateY(26%)', opacity: 0, offset: .45, easing: EOUT}, {transform: 'translateY(0)', opacity: 1}], {direction: dir, easing: 'linear'}),
+      A(heat, [{opacity: 0, transform: 'translate(-50%,-40%) scale(.6)'}, {opacity: .95, transform: 'translate(-50%,-15%) scale(1)', offset: .4}, {opacity: 0, transform: 'translate(-50%,5%) scale(1.4)'}], {direction: dir})]; },
+];
+// nova missão (Retorno → Ignição) ou volta circular: troca suave
+TX.wrap = (o, n) => { const f = ov('ov-fade');
+  return [A(o, [{opacity: 1, transform: 'scale(1)'}, {opacity: 0, transform: 'scale(.98)'}], {duration: 700}), A(f, [{opacity: 0}, {opacity: .8, offset: .5}, {opacity: 0}], {duration: 700}),
+    A(n, [{opacity: 0, transform: 'scale(1.02)'}, {opacity: 0, transform: 'scale(1.02)', offset: .4, easing: EOUT}, {opacity: 1, transform: 'scale(1)'}], {duration: 700, easing: 'linear'})]; };
+const TX_ENTER = [280, 220, 430, 260, 200, 380];
+
+/* ============================ condução: capítulos, autoplay, teclado ============================ */
+let cur = 0, playing = !reduce, elapsed = 0, last = performance.now(), busy = false;
+function setPlaying(p){ playing = p; $('#play').textContent = p ? '❚❚' : '▶'; $('#play').setAttribute('aria-label', p ? 'Pausar' : 'Reproduzir'); }
+async function go(i, dir){
+  if(busy) return;
+  i = (i + scenes.length) % scenes.length; if(i === cur) return;
+  dir = dir || (i > cur ? 1 : -1);
+  const from = cur, O = scenes[from], I = scenes[i];
+  busy = true; document.body.classList.add('busy');
+  if(LEAVE[from]) LEAVE[from](i, dir);
+  cur = i; elapsed = 0; markChapters(); moveGlow(i);
+  I.scrollTop = 0; I.classList.add('active', 'tr'); O.classList.add('tr');
+  scenes.forEach((s, k) => { s.inert = k !== i; s.setAttribute('aria-hidden', k !== i); });
+  let anims;
+  if(reduce){
+    anims = [A(O, [{opacity: 1}, {opacity: 0}], {duration: 260}), A(I, [{opacity: 0}, {opacity: 1}], {duration: 260})];
+    shipTo(i); enterScene(i, dir);
+  } else {
+    const wrap = (dir === 1 && i === 0) || (dir === -1 && from === 0);
+    warp(dir); shipTo(i);
+    if(wrap) anims = TX.wrap(O, I);
+    else if(dir === 1) anims = TX[i - 1](O, I, 'normal');
+    else anims = TX[from - 1](I, O, 'reverse');
+    setTimeout(() => enterScene(i, wrap ? 1 : dir), wrap ? 320 : dir === 1 ? TX_ENTER[i - 1] : 300);
+  }
+  await Promise.all(anims.map(a => a.finished.catch(() => {})));
+  anims.forEach(a => a.cancel());
+  O.classList.remove('active', 'tr'); I.classList.remove('tr'); O.style.zIndex = I.style.zIndex = '';
+  tx.innerHTML = ''; $$('.scene.clone').forEach(c => c.remove());
+  busy = false; document.body.classList.remove('busy');
+}
+chaps.forEach(b => b.addEventListener('click', () => go(+b.dataset.i)));
+$('#play').addEventListener('click', () => setPlaying(!playing));
+$('#prev').addEventListener('click', () => go(cur - 1, -1));
+$('#next').addEventListener('click', () => go(cur + 1, 1));
+addEventListener('keydown', e => {
+  if(e.target.closest && e.target.closest('input')) return;
+  if(e.key === 'ArrowRight') go(cur + 1, 1); else if(e.key === 'ArrowLeft') go(cur - 1, -1);
+  else if(e.key === ' '){ e.preventDefault(); setPlaying(!playing); }
+});
+setPlaying(playing);
+$('#gen').textContent = 'gerado ' + D.gerado;
+
+/* ============================ tooltip ============================ */
+const tip = $('#tip');
+document.addEventListener('pointermove', e => {
+  const t = e.target.closest && e.target.closest('[data-tip]');
+  if(!t){ tip.classList.remove('show'); return; }
+  if(tip.textContent !== t.dataset.tip) tip.textContent = t.dataset.tip;
+  tip.style.transform = `translate(${e.clientX}px,${e.clientY}px) translate(-50%,calc(-100% - 14px))`; tip.classList.add('show');
+});
+
+/* ============================ laço principal ============================ */
+addEventListener('resize', () => { sizeStars(); moveGlow(cur); layoutFlow(); });
+sizeStars();
+const perf = {n: 0, t0: 0, done: reduce};
+function loop(now){
+  const dt = Math.min(64, now - last); last = now;
+  if(!perf.done){ if(!perf.t0) perf.t0 = now; perf.n++;
+    if(now - perf.t0 > 2500){ perf.done = true; if(perf.n * 1000 / (now - perf.t0) < 40){ document.body.classList.add('lite'); sizeStars(); } } }
+  if(playing && !busy){
+    elapsed += dt;
+    if(cur === 2){ const d = Math.min(D.dias.length - 1, Math.floor(elapsed / DUR[2] * D.dias.length)); if(d !== day) setDay(d); }
+    if(elapsed >= DUR[cur]) go(cur + 1, 1);
+  }
+  if(clk.state === 'flight') clk.ms += dt;
+  drawClock();
+  $('#mprog').style.transform = `scaleX(${((cur + Math.min(1, elapsed / DUR[cur])) / scenes.length).toFixed(4)})`;
+  if(!reduce){
+    drawStars(dt, now);
+    if(SEQ.smoke) padSmoke('#pad1', SEQ.smoke === 2 ? 5 : 2, SEQ.smoke === 2);
+    if(SEQ.trail) nozzleTrail('#rkBig .nz', 4);
+    drawFx(dt);
+    if(cur === 1 || busy) drawFlow(dt);
+  }
+  drawShip(now, dt);
+  requestAnimationFrame(loop);
+}
+scenes.forEach((s, k) => { s.inert = k !== 0; s.setAttribute('aria-hidden', k !== 0); });
+scenes[0].classList.add('active'); markChapters(); moveGlow(0); enterScene(0, 1);
+if(reduce){ drawStars(0, performance.now()); requestAnimationFrame(() => { layoutFlow(); drawFlow(0); }); }
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
